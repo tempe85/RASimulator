@@ -3,14 +3,15 @@
 FB::FB()
 {
 	AreaName = "FB";
-	Stations = vector<Unit*>(6);
+	Stations = vector<Unit*>(5);
 	BuildT = { 120 };
 }
 UA::UA()
 {
 	AreaName = "UA";
 	Stations = vector<Unit*>(5);
-	BuildT = {10,10,10,10,10};
+	BuildT = {20,20,20,20,20};
+
 }
 
 INIT::INIT()
@@ -18,19 +19,23 @@ INIT::INIT()
 	AreaName = "INIT";
 	Stations = vector<Unit*>(1);
 	BuildT = { 10 };
+	FailCoefficient = 1;
 }
 AVS::AVS()
 {
 	AreaName = "AVS";
 	Stations = vector<Unit*>(1);
 	BuildT = { 10 };
+	FailCoefficient = 2;
+	ReworkCoefficient = 5;
 }
 ULTest::ULTest()
 {
 	AreaName = "ULT";
-	Stations = vector<Unit*>(1);
-	BuildT = {30};
+	Stations = vector<Unit*>(2);
+	BuildT = {30, 30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
+	FailCoefficient = 2;
 }
 
 
@@ -58,10 +63,18 @@ Build::Build()
 CLTest::CLTest()
 {
 	AreaName = "CLT";
-	Stations = vector<Unit*>(2);
-	BuildT = {30,20};
+	Stations = vector<Unit*>(1);
+	BuildT = {20};
+	FailCoefficient = 2;
 }
 
+Settings::Settings()
+{
+	AreaName = "Settings";
+	Stations = vector<Unit*>(1);
+	BuildT = { 20 };
+
+}
 Doors::Doors()
 {
 	AreaName = "Doors";
@@ -79,8 +92,8 @@ Inspection::Inspection()
 Packaging::Packaging()
 {
 	AreaName = "Pkg";
-	Stations = vector<Unit*>(3);
-	BuildT = {10,10,10};
+	Stations = vector<Unit*>(1);
+	BuildT = {20};
 }
 
 
@@ -91,3 +104,34 @@ Packaging::Packaging()
 //	Stations = *(new vector<Unit>(3);
 //	BuildTime = 30;
 //}
+
+// FAILING UNITS
+bool UnitFailCheck(WorkArea curArea)
+{
+	int random_variable = rand() % 100 + 1;
+	if (random_variable <= curArea.FailCoefficient)
+	{
+		return true;
+	}
+	return false;
+}
+void PrintUnitFail(Unit FailedUnit, WorkArea curArea)
+{
+	cout << endl <<  FailedUnit.UnitName << " has been sent to rework from " << curArea.AreaName << endl;
+
+}
+void SendUnitToRework(FlowLine &FL, const int i, const int j, const bool IsOverFlow)
+{
+	if (IsOverFlow == false)
+	{
+		PrintUnitFail(*(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i]);
+		FL.ReWork.push_back(FL.TheWorkArea[i].Stations[j]);
+		FL.TheWorkArea[i].Stations[j] = nullptr; //unit leaves to rework
+	}
+	else
+	{
+		PrintUnitFail(*(FL.TheWorkArea[i].OverFlow.front()), FL.TheWorkArea[i]);
+		FL.ReWork.push_back(FL.TheWorkArea[i].OverFlow.front());
+		RemoveFirstOverFlowUnit(FL, i);
+	}
+}

@@ -115,6 +115,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AreaSimulations.cpp" />
     <ClCompile Include="FL.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ReadInUnits.cpp" />

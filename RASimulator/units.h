@@ -6,7 +6,11 @@ public:
 	string UnitName = "TempUnitName";
 	unordered_map<string, double> BuildTimeMap;
 	double TimeLeft = 0;
+	double TotalUnitBuildTime = 0;
+	double TotalUnitDownTime = 0;
+	string AreaStart;
 	Unit() {};
+	bool Settings = false; //default 
 };
 
 class SD1 : public Unit
@@ -24,11 +28,12 @@ public:
 			{ "Rec", 1.0 },
 			{ "Prep", 1.0 },
 			{ "Build", 2.0 },
-			{ "CLT", 2.0 },
+			{ "CLT", 1.5 },
 			{ "Doors", 1.0 },
 			{ "Ins", 1.0 },
 			{ "Pkg", 1.0 },
 		};
+		Settings = false;
 	}
 };
 
@@ -51,7 +56,9 @@ public:
 			{ "Doors", 1.0 },
 			{ "Ins", .8 },
 			{ "Pkg", 1.0 },
+			{"Settings", 1.5},
 		};
+		Settings = true;
 	}
 };
 
@@ -75,6 +82,7 @@ public:
 			{ "Ins", 1.0 },
 			{ "Pkg", 1.0 },
 		};
+		Settings = false;
 	}
 };
 
@@ -93,11 +101,13 @@ public:
 			{ "Rec", .4 },
 			{ "Prep", 1.3 },
 			{ "Build", 1.0 },
-			{ "CLT", 2.0 },
+			{ "CLT", .8 },
 			{ "Doors", 1.8 },
 			{ "Ins", 1.0 },
 			{ "Pkg", 1.0 },
+			{"Settings", 1.0},
 		};
+		Settings = true;
 		
 	}
 };

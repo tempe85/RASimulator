@@ -63,25 +63,37 @@ void PrintFlowLine(FlowLine FL)
 		cout << "Area Overflow: ";
 		if (!FL.TheWorkArea[i].OverFlow.empty())
 		{
+			//cout << FL.TheWorkArea.OverFLow;
 			for (list<Unit*>::iterator it = FL.TheWorkArea[i].OverFlow.begin(); it != FL.TheWorkArea[i].OverFlow.end(); ++it)
 			{
-				cout << (*it)->UnitName << ",";
+				cout << (*it)->UnitName;
+				cout << '(' << (*it)->TotalUnitDownTime << "),";
 
 			}
-		//	cout << FL.TheWorkArea[i].OverFlow.size();
+			//cout << FL.TheWorkArea[i].OverFlow.size();
 		}
 		else
 		{
 			cout << 0;
 		}
-		cout << endl << endl;
+		cout << endl;
+		
 		j = 0;
 		i++;
 	} while (i < FL.TheWorkArea.size());
 
-
-	cout << endl << "Completed Units: " << FL.CompletedUnitCounter << endl;
-	cout << "Work Minutes completed: " << FL.WorkTimeFinished << endl;
+	cout << endl << "Current Rework Tracker: ";
+	for (vector<Unit*>::iterator it = FL.ReWork.begin(); it != FL.ReWork.end(); ++it)
+	{
+		cout << (*it)->UnitName << ",";
+	}
+	cout << endl << "Completed Units: Count:" << FL.CompletedUnitCounter << "  Unit Type: ";
+	//for (vector<Unit*>::iterator it = FL.CompletedUnits.begin(); it != FL.CompletedUnits.end(); ++it)
+	//{
+	//	cout << (*it)->UnitName << ",";
+	//}
+	cout << FL.CompletedUnits; 
+	cout << endl << "Work Minutes completed: " << FL.WorkTimeFinished << endl;
 }
 double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTime)
 {
@@ -104,6 +116,8 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 			TestUnit = CheckUnitType(line, FL);
 			FL.TheWorkArea[i].Stations[j] = new Unit;
 			*(FL.TheWorkArea[i].Stations[j]) = TestUnit;
+			//We Need to keep track of where the unit started on the flowline
+			FL.TheWorkArea[i].Stations[j]->AreaStart = FL.TheWorkArea[i].AreaName;
 			//There needs to be a build and FB exception
 			if (FL.TheWorkArea[i].AreaName == "Build" || FL.TheWorkArea[i].AreaName == "FB")
 			{
@@ -178,17 +192,6 @@ void MoveInFlowline (FlowLine &FL, int &i, int &j, double & WorkdayTime)
 		}
 		else if (j == 0)
 		{
-			//first going to see if current spot is free and overflow for previous area has a unit
-			if (!OverFlowIsEmpty(FL, i)) // if the overflow for the area is not empty
-			{
-				if (FL.TheWorkArea[i].Stations[j] == nullptr) //if current area is empty
-				{
-					FL.TheWorkArea[i].Stations[j] = FL.TheWorkArea[i].OverFlow.front();
-					FL.TheWorkArea[i].Stations[j]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i].AreaName, *(FL.TheWorkArea[i].Stations[0]), FL, FL.TheWorkArea[i].BuildT[0]);
-					RemoveFirstOverFlowUnit(FL, i);
-				}
-			}
-			//at the first station in an area
 			i--;
 			j = FL.TheWorkArea[i].Stations.size() - 1;
 		}
@@ -221,20 +224,28 @@ void RemoveFirstOverFlowUnit(FlowLine &FL, int i)
 	return;
 }
 
-void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile)
+void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k)
 {
 	while (FL.WorkDay > 0)
 	{
-		cout << "Time left in day: " << FL.WorkDay << endl;
-		SimulateFlowLine(FL, ReadUnitFile);
+		if (k == 2)
+		{
+			cout << "Time left in day: " << FL.WorkDay << endl;
+		}
+		//SimulateFlowLine(FL, ReadUnitFile);
+		SimulateFlowLine2(FL, ReadUnitFile);
+		if (k == 2)
+		{
+			PrintFlowLine(FL);
+			system("pause");
+			system("cls");
+		}
+	}
+	if (k == 1)
+	{
 		PrintFlowLine(FL);
 		system("pause");
-		system("cls");
-
 	}
-	//PrintFlowLine(FL);
-	//system("pause");
-
 	return;
 }
 
@@ -246,164 +257,131 @@ void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j)
 	TempUnit = CheckUnitType(TempLine, FL);
 	FL.TheWorkArea[i].Stations[j] = new Unit;
 	*(FL.TheWorkArea[i].Stations[j]) = TempUnit;
+	//Keeping track of where a unit started
+	FL.TheWorkArea[i].Stations[j]->AreaStart = FL.TheWorkArea[i].AreaName;
 	FL.TheWorkArea[i].Stations[j]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[0].AreaName, *(FL.TheWorkArea[i].Stations[j]), FL, FL.TheWorkArea[i].BuildT[0]); //BuildT is zero because FB BuildT is size 1
 
 	return;
 }
-FlowLine SimulateFlowLine(FlowLine &FL, ifstream & ReadUnitFile)
+
+void CountAreaDowntime(FlowLine &FL)
+{
+
+	for (int i = 0; i <= FL.TheWorkArea.size() - 1; i++)
+	{
+		for (int j = 0; j <= FL.TheWorkArea[i].Stations.size() - 1; j++)
+		{
+			if (FL.TheWorkArea[i].Stations[j] == nullptr)
+			{
+				if (FL.TheWorkArea[i].AreaName != "ULT")
+				{
+					FL.TheWorkArea[i].downtime += FL.WorkTime;
+				}
+				else
+				{
+					if (j = 1) //last test station in ULT, must change if you add more test stations to ULT!!
+					{
+						if (FL.TheWorkArea[i].Stations[0] == nullptr && FL.TheWorkArea[i].Stations[1] == nullptr)
+						{
+							FL.TheWorkArea[i].downtime += FL.WorkTime;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void CalculateUnitDownTime(FlowLine FL)
+{
+	for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+	{
+		//First check if Area has overflow
+		if ((*it).OverFlow.empty())
+		{
+			//Container is 0, so skip
+		}
+		else
+		{
+			for (list<Unit*>::iterator it1 = it->OverFlow.begin(); it1 != it->OverFlow.end(); ++it1)
+			{
+				if (it->AreaName != "UA") //not counting FB downtime for now
+				{
+					(*it1)->TotalUnitDownTime += FL.WorkTime;
+				}
+			}
+		}
+		//First check all units currently on the line with timeleft == 0
+		//for (vector<Unit*>::iterator it2 = it->Stations.begin(); it2 != it->Stations.end(); ++it2)
+		//{
+		//	if (*it2 == nullptr)
+		//	{
+		//		//skip
+		//	}
+		//	else
+		//	{
+		//		if ((*it2)->TimeLeft <= 0)
+		//		{
+		//			(*it2)->TotalUnitDownTime += FL.WorkTime;
+		//		}
+		//	}
+		//}
+	}
+}
+FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 {
 	int i = FL.TheWorkArea.size() - 1;
 	int j = FL.TheWorkArea[i].Stations.size() - 1;
-	Unit TempUnit;
-	string TempLine;
-
-	//We're starting at the end of the flowline
-	do 
-	{ 
-		//If the Station is already NULL we must skip it
-		if (FL.TheWorkArea[i].Stations[j] == nullptr)
+	//Unit TempUnit;
+	//string TempLine;
+	do
+	{
+		while (FL.TheWorkArea[i].AreaName == "Pkg")
 		{
-			MoveInFlowline(FL, i, j, FL.WorkDay);
+			SimulatePkg(FL, i, j);
 		}
-		else //Don't skip
+		while (FL.TheWorkArea[i].AreaName == "UA" ||
+			FL.TheWorkArea[i].AreaName == "INIT" ||
+			FL.TheWorkArea[i].AreaName == "Rec" ||
+			FL.TheWorkArea[i].AreaName == "Prep" ||
+			FL.TheWorkArea[i].AreaName == "Doors" ||
+			FL.TheWorkArea[i].AreaName == "Ins" ||
+			FL.TheWorkArea[i].AreaName == "Settings"
+			)
 		{
-			if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft) == true)
-			{
-				//check if it's in FB
-				if (FL.TheWorkArea[i].AreaName == "FB")
-				{
-					//check if first UA spot is open
-					if (FL.TheWorkArea[i + 1].Stations[0] == nullptr)
-					{
-						FL.TheWorkArea[i + 1].Stations[0] = FL.TheWorkArea[i].Stations[j];
-						FL.TheWorkArea[i].Stations[j] = nullptr;
-					}
-					else // UA spot is not open
-					{
-						//Move to UA overflow
-						MoveToOverFlow(FL, i, j);
-					}
-					AddUnitToFlow(FL, ReadUnitFile, i, j);
-					FL.TheWorkArea[i + 1].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i + 1].AreaName, *(FL.TheWorkArea[i + 1].Stations[0]), FL, FL.TheWorkArea[i + 1].BuildT[0]);
-					MoveInFlowline(FL, i, j, FL.WorkDay);
-				}
-				//check if at the end of flowline
-				else if (i == FL.TheWorkArea.size() - 1 && j == FL.TheWorkArea[i].Stations.size() - 1) //end of flowline
-				{
-					//pop unit out of the Flow Line as it is completed, first memory must be freed
-					delete FL.TheWorkArea[i].Stations[j];
-					FL.TheWorkArea[i].Stations[j] = nullptr;
-					MoveInFlowline(FL, i, j, FL.WorkDay);
-					FL.CompletedUnitCounter += 1;
+			SimulateBasicArea(FL, i, j);
+		}
+		while (FL.TheWorkArea[i].AreaName == "CLT")
+		{
+			SimulateCLT(FL, i, j);
+		}
+		while (FL.TheWorkArea[i].AreaName == "Build")
+		{
+			SimulateBuild(FL, i, j);
+		}
+		while (FL.TheWorkArea[i].AreaName == "ULT")
+		{
+			SimulateULT(FL, i, j);
+		}
+		while (FL.TheWorkArea[i].AreaName == "AVS")
+		{
+			SimulateAVS(FL, i, j);
+		}
+		while (i == 0 && FL.TheWorkArea[i].AreaName == "FB") // when i is -1, this will break code
+		{
+			SimulateFormboard(FL, i, j, ReadUnitFile);
+		}
+		
 
-				}
-				else //not end of flowline but is finished, we must see if it can be moved to a new spot
-				{
-					//first check if it's at the end of an area
-					if (j == FL.TheWorkArea[i].Stations.size() - 1)
-					{
-						//needs to be moved to a new area, only if a spot is available
-						if (FL.TheWorkArea[i + 1].Stations[0] == nullptr) //there is a free spot
-						{
-							FL.TheWorkArea[i + 1].Stations[0] = FL.TheWorkArea[i].Stations[j]; //Moving pointer to the next area spot
-							FL.TheWorkArea[i].Stations[j] = nullptr; //Current spot is now free
-							//Need Timeleft for a unit reset
-
-							//FL.TheWorkArea[i + 1].Stations[0]->TimeLeft = FL.TheWorkArea[i + 1].BuildT[0];
-
-							FL.TheWorkArea[i + 1].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i + 1].AreaName, *(FL.TheWorkArea[i + 1].Stations[0]), FL, FL.TheWorkArea[i + 1].BuildT[0]);
-							//double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTime)
-							//still need to change i and j
-							MoveInFlowline(FL, i, j, FL.WorkDay);
-
-						}
-						else //Next spot is not free
-						{
-							//Move to Next area overflow
-							FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-							FL.TheWorkArea[i].Stations[j] = nullptr;
-
-							//Need to add to downtime
-							//FL.TheWorkArea[i].downtime += FL.WorkTime; //No need with overflow at this time
-							//still need to change i and j
-							MoveInFlowline(FL, i, j, FL.WorkDay);
-						}
-					}
-					else if (FL.TheWorkArea[i].AreaName == "Build") //The build exception!
-					{
-						//it can skip over a unit if possible. Build is the only place where this can happen
-						if (FL.TheWorkArea[i + 1].Stations[0] == nullptr)
-						{
-							FL.TheWorkArea[i + 1].Stations[0] = FL.TheWorkArea[i].Stations[j];
-							FL.TheWorkArea[i].Stations[j] = nullptr;
-						}
-						else //Test is not open, so move to test overflow
-						{
-							MoveToOverFlow(FL, i, j);
-						}
-					}
-					else //Not at the end of an area, can't be moved to overflow! (unless in build line!)
-					{
-
-						//next spot is FL.TheWorkArea[i].Stations[j+1];
-						//Check if next spot in the work area is free
-						if (FL.TheWorkArea[i].Stations[j + 1] == nullptr) //next spot is free
-						{
-							//move pointer
-							FL.TheWorkArea[i].Stations[j + 1] = FL.TheWorkArea[i].Stations[j];
-							FL.TheWorkArea[i].Stations[j] = nullptr; //free current spot
-							//Need to reset time left
-							//FL.TheWorkArea[i].Stations[j + 1]->TimeLeft = FL.TheWorkArea[i].BuildT[j + 1];
-							FL.TheWorkArea[i].Stations[j + 1]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i].AreaName, *(FL.TheWorkArea[i].Stations[j + 1]), FL, FL.TheWorkArea[i].BuildT[j + 1]);
-							MoveInFlowline(FL, i, j, FL.WorkDay);
-						}
-						else //next station is not free
-						{
-							//Need to add to area downtime
-							FL.TheWorkArea[i].downtime += FL.WorkTime;
-							MoveInFlowline(FL, i, j, FL.WorkDay);
-						}
-					}
-				}
-			}
-			else //not finished, timeleft > 0
-			{
-				FL.TheWorkArea[i].Stations[j]->TimeLeft -= FL.WorkTime; //worktime is the incremental change
-				//Add to work time completed
-				FL.WorkTimeFinished += FL.WorkTime;
-				//Need to adjust in case TimeLeft is less than 0
-				if (FL.TheWorkArea[i].Stations[j]->TimeLeft < 0)
-				{
-					FL.WorkTimeFinished += FL.TheWorkArea[i].Stations[j]->TimeLeft;
-				}
-
-				//Not finished but is in the build line, check if any spot in build line is free (starting at the end of build), also can't be at the end of the build line
-				if (FL.TheWorkArea[i].AreaName == "Build" && j < FL.TheWorkArea[i].Stations.size() - 1)
-				{
-					for (int k = FL.TheWorkArea[i].Stations.size() - 1; k > j; k--)
-					{
-						if (FL.TheWorkArea[i].Stations[k] == nullptr)
-						{
-							FL.TheWorkArea[i].Stations[k] = FL.TheWorkArea[i].Stations[j];
-							FL.TheWorkArea[i].Stations[j] = nullptr;
-							k = j; //break out of loop
-						}
-					}
-				}
-
-				//Moving to next spot in line, as long as we're not at the start
-				MoveInFlowline(FL, i, j, FL.WorkDay);
-
-			}
-		} 
-	
-	}while (i > -1 || j != 0); //negative one to allow loop to run when i = 0 and j = 0 which is the first unit in the Flowline
-
-
-	//FL.WorkDay -= FL.WorkTime;
+	} while (i > -1 || j != 0);
+	//Count downtime
+	CountAreaDowntime(FL);
+	CalculateUnitDownTime(FL);
 
 	return FL;
 }
+
+
 
 void CreateUnitList(FlowLine &FL)
 {
@@ -428,7 +406,8 @@ int main (void)
 	vector<WorkArea> FL;
 	vector<string> UnitList;
 	ifstream ReadUnitFile("Units2.txt");
-	srand(std::time(nullptr));
+	int k;
+	srand(std::time(nullptr)); //seed for rand
 
 
 	CreateFlowLine(FL);
@@ -439,7 +418,10 @@ int main (void)
 	CreateUnitList(TestFlow);
 	FillFlowLine(TestFlow, TestUnit, ReadUnitFile);
 //	PrintFlowLine(TestFlow);
-	SimulateFlowHelper(TestFlow, ReadUnitFile);
+	cout << "Please select between (1) Simulate entire day and (2) Simulate by minute";
+	cin >> k;
+	system("cls");
+	SimulateFlowHelper(TestFlow, ReadUnitFile, k);
 
 
 	ReadUnitFile.close();
