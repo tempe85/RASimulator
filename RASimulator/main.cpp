@@ -119,9 +119,22 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 			//We Need to keep track of where the unit started on the flowline
 			FL.TheWorkArea[i].Stations[j]->AreaStart = FL.TheWorkArea[i].AreaName;
 			//There needs to be a build and FB exception
-			if (FL.TheWorkArea[i].AreaName == "Build" || FL.TheWorkArea[i].AreaName == "FB")
+			if (FL.TheWorkArea[i].AreaName == "Build")
 			{
-				FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]);
+				if (j == FL.TheWorkArea[i].Stations.size() - 1) //at station 6
+				{
+					FL.TheWorkArea[i].Stations[j]->TimeLeft = 5; //station 6 will only be a lookback area.
+				}
+				//Need to account for station 6 in build
+				else
+				{
+					FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]);
+					FL.TheWorkArea[i].Stations[j]->TimeLeft -= ((FL.TheWorkArea[i].Stations[j]->TimeLeft) / (FL.TheWorkArea[i].Stations.size()-1))* j;
+				}
+			}
+			else if (FL.TheWorkArea[i].AreaName == "FB")
+			{
+				FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]); 
 				FL.TheWorkArea[i].Stations[j]->TimeLeft -= ((FL.TheWorkArea[i].Stations[j]->TimeLeft) / ((FL.TheWorkArea[i].Stations.size()))* j);
 			}
 			else if (FL.TheWorkArea[i].AreaName == "UA" && FL.TheWorkArea[i].OverFlow.empty()) //UA needs kits available at the start, only the first time, overflow should have units, ~15
@@ -226,13 +239,25 @@ void RemoveFirstOverFlowUnit(FlowLine &FL, int i)
 
 void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k)
 {
+	int CheckAreaDown;
+	bool checkAreaDown = false;
 	while (FL.WorkDay > 0)
 	{
+		CheckAreaDown = FL.WorkDay;
 		if (k == 2)
 		{
 			cout << "Time left in day: " << FL.WorkDay << endl;
 		}
 		//SimulateFlowLine(FL, ReadUnitFile);
+		//cout << CheckAreaDown % 30;
+		if (CheckAreaDown % 30 == 0) //checking every thirty 30 minutes for area going down
+		{
+			FL.CheckAreaDown = true;
+		}
+		else
+		{
+			FL.CheckAreaDown = false;
+		}
 		SimulateFlowLine2(FL, ReadUnitFile);
 		if (k == 2)
 		{
@@ -311,29 +336,51 @@ void CalculateUnitDownTime(FlowLine FL)
 				}
 			}
 		}
-		//First check all units currently on the line with timeleft == 0
-		//for (vector<Unit*>::iterator it2 = it->Stations.begin(); it2 != it->Stations.end(); ++it2)
-		//{
-		//	if (*it2 == nullptr)
-		//	{
-		//		//skip
-		//	}
-		//	else
-		//	{
-		//		if ((*it2)->TimeLeft <= 0)
-		//		{
-		//			(*it2)->TotalUnitDownTime += FL.WorkTime;
-		//		}
-		//	}
-		//}
 	}
 }
+
+bool AreaDownHelper(FlowLine &FL, int & i, int & j)
+{
+	if (FL.TheWorkArea[i].AreaDown == true && FL.TheWorkArea[i].AreaDownTimer > 0)
+	{
+		//cout << endl << FL.TheWorkArea[i].AreaName << "Area down for " << FL.TheWorkArea[i].AreaDownTimer << " more minutes" << endl;
+		if (FL.TheWorkArea[i].AreaDownTimer == 30)
+		{
+			cout << endl << FL.TheWorkArea[i].AreaName << " area Down!" << endl;
+		}
+		FL.TheWorkArea[i].AreaDownTimer -= FL.WorkTime;
+		if (FL.TheWorkArea[i].AreaDownTimer <= 0) //station back up
+		{
+			cout << FL.TheWorkArea[i].AreaName << " back up!" << endl;
+			FL.TheWorkArea[i].AreaDown == false;
+		}
+		return true;
+	}
+	return false;
+}
+
 FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 {
 	int i = FL.TheWorkArea.size() - 1;
 	int j = FL.TheWorkArea[i].Stations.size() - 1;
+	int Random_ULT;
+	int Random_CLT;
+	int Random_INIT;
+	int Random_AVS;
 	//Unit TempUnit;
 	//string TempLine;
+	if (FL.CheckAreaDown == true)
+	{
+		for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+		{
+			if (it->CheckIfAreaDown())
+			{
+				it->AreaDown = true;
+				it->AreaDownTimer = 30;
+			};
+			
+		}
+	}
 	do
 	{
 		while (FL.TheWorkArea[i].AreaName == "Pkg")
@@ -341,7 +388,6 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 			SimulatePkg(FL, i, j);
 		}
 		while (FL.TheWorkArea[i].AreaName == "UA" ||
-			FL.TheWorkArea[i].AreaName == "INIT" ||
 			FL.TheWorkArea[i].AreaName == "Rec" ||
 			FL.TheWorkArea[i].AreaName == "Prep" ||
 			FL.TheWorkArea[i].AreaName == "Doors" ||
@@ -351,9 +397,29 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 		{
 			SimulateBasicArea(FL, i, j);
 		}
+		while (FL.TheWorkArea[i].AreaName == "INIT")
+		{
+			if (AreaDownHelper(FL, i, j) == true)
+			{
+				j = 0;
+				OverFlowManager(FL, i, j);
+			}
+			else
+			{
+				SimulateBasicArea(FL, i, j);
+			}
+		}
 		while (FL.TheWorkArea[i].AreaName == "CLT")
 		{
-			SimulateCLT(FL, i, j);
+			if (AreaDownHelper(FL, i, j) == true)
+			{
+				j = 0;
+				OverFlowManager(FL, i, j);
+			}
+			else
+			{
+				SimulateCLT(FL, i, j);
+			}
 		}
 		while (FL.TheWorkArea[i].AreaName == "Build")
 		{
@@ -361,11 +427,23 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 		}
 		while (FL.TheWorkArea[i].AreaName == "ULT")
 		{
+			//if(AreaDownHelper(FL, i) == true)
+			//{
+			//	break;
+			//}
 			SimulateULT(FL, i, j);
 		}
 		while (FL.TheWorkArea[i].AreaName == "AVS")
 		{
-			SimulateAVS(FL, i, j);
+			if (AreaDownHelper(FL, i, j) == true)
+			{
+				j = 0;
+				OverFlowManager(FL, i, j);
+			}
+			else
+			{
+				SimulateAVS(FL, i, j);
+			}
 		}
 		while (i == 0 && FL.TheWorkArea[i].AreaName == "FB") // when i is -1, this will break code
 		{
@@ -426,7 +504,6 @@ int main (void)
 
 	ReadUnitFile.close();
 
-	int random_variable = rand() % 100 + 1;
 	system("pause");
 
 	return 0;

@@ -28,6 +28,7 @@ void WorkArea::AddToRework(vector<Unit> &Rework, Unit MOT)
 	return;
 }
 
+
 void CreateFlowLine(vector<WorkArea> &FL)
 {
 	FL.push_back(*(new FB));
@@ -46,18 +47,6 @@ void CreateFlowLine(vector<WorkArea> &FL)
 	//pointer -> FL.push_back(new Packaging);
 	return;
 }
-//ostream& operator<<(ostream& os, const list<Unit>& v)
-//{
-//	for (list<Unit>::iterator it = v.begin(); it != v.end(); ++it)
-//	{
-//		v._Getpfirst;
-//		v.
-//	}
-//
-//
-//	os << endl;
-//	return os;
-//}
 
 ostream& operator<<(ostream& os, const vector<Unit*>& v)
 {

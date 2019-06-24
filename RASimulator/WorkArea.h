@@ -25,6 +25,11 @@ public:
 	//vector<string> Rework;
 	int FailCoefficient = 0;
 	int ReworkCoefficient = 0;
+	int AreaDownCoefficient = 0;
+	bool AreaDown = false;
+	int AreaDownTimer = 0;
+
+	bool CheckIfAreaDown();
 };
 class FB : public WorkArea
 {
@@ -111,7 +116,7 @@ public:
 class FlowLine
 {
 public:
-	double WorkDay = 700;
+	double WorkDay = 480;
 	double WorkTime = 1;
 	int CompletedUnitCounter = 0;
 	double WorkTimeFinished = 0;
@@ -119,6 +124,9 @@ public:
 	vector<pair <string, Unit>> UnitList;
 	vector<Unit*> ReWork;
 	vector<Unit*> CompletedUnits;
+	int BuildStation6 = 10;
+	bool CheckAreaDown = false;
+
 
 };
 //what we're going to do is simulate 10 minutes at a time
@@ -156,7 +164,7 @@ void SimulateULT(FlowLine &FL, int &i, int &j);
 void SimulateAVS(FlowLine &FL, int &i, int &j);
 void SimulateCLT(FlowLine &FL, int &i, int &j);
 void OverFlowManager(FlowLine &FL, int &i, int &j);
-
+bool AreaDownHelper(FlowLine &FL, int & i, int & j);
 
 //template <typename T
 ostream& operator<<(ostream& os, const vector<Unit*>& v);

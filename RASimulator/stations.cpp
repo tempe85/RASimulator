@@ -20,6 +20,7 @@ INIT::INIT()
 	Stations = vector<Unit*>(1);
 	BuildT = { 10 };
 	FailCoefficient = 1;
+	AreaDownCoefficient = 22;
 }
 AVS::AVS()
 {
@@ -28,6 +29,7 @@ AVS::AVS()
 	BuildT = { 10 };
 	FailCoefficient = 2;
 	ReworkCoefficient = 5;
+	AreaDownCoefficient = 22;
 }
 ULTest::ULTest()
 {
@@ -36,6 +38,7 @@ ULTest::ULTest()
 	BuildT = {30, 30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
 	FailCoefficient = 2;
+	AreaDownCoefficient = 22;
 }
 
 
@@ -66,6 +69,7 @@ CLTest::CLTest()
 	Stations = vector<Unit*>(1);
 	BuildT = {20};
 	FailCoefficient = 2;
+	AreaDownCoefficient = 22;
 }
 
 Settings::Settings()
@@ -133,5 +137,18 @@ void SendUnitToRework(FlowLine &FL, const int i, const int j, const bool IsOverF
 		PrintUnitFail(*(FL.TheWorkArea[i].OverFlow.front()), FL.TheWorkArea[i]);
 		FL.ReWork.push_back(FL.TheWorkArea[i].OverFlow.front());
 		RemoveFirstOverFlowUnit(FL, i);
+	}
+}
+
+bool WorkArea::CheckIfAreaDown()
+{
+	int random_variable = rand() % 1000 + 1;
+	if (this->AreaDownCoefficient >= random_variable)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
