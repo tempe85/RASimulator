@@ -6,8 +6,12 @@ public:
 	string UnitName = "TempUnitName";
 	unordered_map<string, double> BuildTimeMap;
 	double TimeLeft = 0;
-	double TotalUnitBuildTime = 0;
+	double TotalUnitNoValueTime = 0;
+	double TotalUnitValueTime = 0;
 	double TotalUnitDownTime = 0;
+	//vector<double> AreaDownTime;
+	//int AreaDownTime[12];
+	unordered_map<string, double> DownTimeMap;
 	string AreaStart;
 	Unit() {};
 	bool Settings = false; //default 

@@ -93,7 +93,8 @@ void PrintFlowLine(FlowLine FL)
 	//	cout << (*it)->UnitName << ",";
 	//}
 	cout << FL.CompletedUnits; 
-	cout << endl << "Work Minutes completed: " << FL.WorkTimeFinished << endl;
+	cout << endl << "Value added minutes completed: " << FL.TimeValueAdded;
+	cout << endl << "No value added minutes completed: " << FL.TimeNoValueAdded << endl;
 }
 double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTime)
 {
@@ -285,6 +286,9 @@ void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j)
 	//Keeping track of where a unit started
 	FL.TheWorkArea[i].Stations[j]->AreaStart = FL.TheWorkArea[i].AreaName;
 	FL.TheWorkArea[i].Stations[j]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[0].AreaName, *(FL.TheWorkArea[i].Stations[j]), FL, FL.TheWorkArea[i].BuildT[0]); //BuildT is zero because FB BuildT is size 1
+	//Check if rework needed
+	UnitReworkCheck(FL.TheWorkArea[i], *(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i].Stations[j]->TimeLeft);
+
 
 	return;
 }
@@ -346,12 +350,12 @@ bool AreaDownHelper(FlowLine &FL, int & i, int & j)
 		//cout << endl << FL.TheWorkArea[i].AreaName << "Area down for " << FL.TheWorkArea[i].AreaDownTimer << " more minutes" << endl;
 		if (FL.TheWorkArea[i].AreaDownTimer == 30)
 		{
-			cout << endl << FL.TheWorkArea[i].AreaName << " area Down!" << endl;
+			cout << endl << FL.TheWorkArea[i].AreaName << " area Down! (" << FL.WorkDay<< ")" <<endl;
 		}
 		FL.TheWorkArea[i].AreaDownTimer -= FL.WorkTime;
 		if (FL.TheWorkArea[i].AreaDownTimer <= 0) //station back up
 		{
-			cout << FL.TheWorkArea[i].AreaName << " back up!" << endl;
+			cout << FL.TheWorkArea[i].AreaName << " back up! (" << FL.WorkDay << ")" << endl;
 			FL.TheWorkArea[i].AreaDown == false;
 		}
 		return true;
@@ -427,11 +431,15 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 		}
 		while (FL.TheWorkArea[i].AreaName == "ULT")
 		{
-			//if(AreaDownHelper(FL, i) == true)
-			//{
-			//	break;
-			//}
-			SimulateULT(FL, i, j);
+			if (AreaDownHelper(FL, i, j) == true)
+			{
+				j = 0;
+				OverFlowManager(FL, i, j);
+			}
+			else
+			{
+				SimulateULT(FL, i, j);
+			}
 		}
 		while (FL.TheWorkArea[i].AreaName == "AVS")
 		{
@@ -459,7 +467,19 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 	return FL;
 }
 
-
+void UnitTimeOutputs(FlowLine const FL, ofstream & UnitOutputs)
+{
+	UnitOutputs << "Unit Type, Start Area, Value Added Time, No Value added Time, Down Time\n";
+	for (int i = 0; i < FL.CompletedUnits.size(); i++)
+	{
+		UnitOutputs << FL.CompletedUnits[i]->UnitName << ",";
+		UnitOutputs << FL.CompletedUnits[i]->AreaStart << ",";
+		UnitOutputs << FL.CompletedUnits[i]->TotalUnitValueTime << ",";
+		UnitOutputs << FL.CompletedUnits[i]->TotalUnitNoValueTime << ",";
+		UnitOutputs << FL.CompletedUnits[i]->TotalUnitDownTime << ",";
+		UnitOutputs << "\n";
+	}
+}
 
 void CreateUnitList(FlowLine &FL)
 {
@@ -484,14 +504,16 @@ int main (void)
 	vector<WorkArea> FL;
 	vector<string> UnitList;
 	ifstream ReadUnitFile("Units2.txt");
+	//ofstream UnitOutputs("Output.csv", fstream::app); USE THIS if you don't want to overwrite 
+	ofstream UnitOutputs("Output.csv"); 
 	int k;
 	srand(std::time(nullptr)); //seed for rand
+
 
 
 	CreateFlowLine(FL);
 
 	TestFlow.TheWorkArea = FL;
-
 
 	CreateUnitList(TestFlow);
 	FillFlowLine(TestFlow, TestUnit, ReadUnitFile);
@@ -500,11 +522,13 @@ int main (void)
 	cin >> k;
 	system("cls");
 	SimulateFlowHelper(TestFlow, ReadUnitFile, k);
+	UnitTimeOutputs(TestFlow, UnitOutputs);
 
 
+	UnitOutputs.close();
 	ReadUnitFile.close();
 
-	system("pause");
+	//system("pause");
 
 	return 0;
 }

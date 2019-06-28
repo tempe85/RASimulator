@@ -29,6 +29,7 @@ public:
 	bool AreaDown = false;
 	int AreaDownTimer = 0;
 
+	bool ValueAdded;
 	bool CheckIfAreaDown();
 };
 class FB : public WorkArea
@@ -119,7 +120,8 @@ public:
 	double WorkDay = 480;
 	double WorkTime = 1;
 	int CompletedUnitCounter = 0;
-	double WorkTimeFinished = 0;
+	double TimeValueAdded = 0;
+	double TimeNoValueAdded = 0;
 	vector<WorkArea> TheWorkArea;
 	vector<pair <string, Unit>> UnitList;
 	vector<Unit*> ReWork;
@@ -142,14 +144,15 @@ void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k);
 void PrintFlowLine(FlowLine FL);
 void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j);
 bool UnitFailCheck(WorkArea curArea);
+void UnitReworkCheck(WorkArea curArea, Unit curUnit, double & unitBuildTime);
 void PrintUnitFail(Unit FailedUnit, WorkArea curArea);
-void SendUnitToRework(FlowLine &FL, const int i, const int j, const bool IsOverFlow);
+void SendUnitToTS(FlowLine &FL, const int i, const int j, const bool IsOverFlow);
 
 bool CheckIfFinished(double TimeLeft);
 double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTime);
 void MoveInFlowline(FlowLine &FL, int &i, int &j, double & WorkdayTime);
 bool OpenSpotInNextWorkArea(FlowLine & FL, const int & i, int &s);
-void AdjustTimeLeft(FlowLine & FL, int & TimeLeft);
+void AdjustTimeLeft(FlowLine & FL, bool ValueAdded, Unit & curUnit);
 int CheckSettings(FlowLine const FL, int &k, const int j);
 void CountAreaDowntime(FlowLine &FL);
 void CalculateUnitDownTime(FlowLine FL);
@@ -165,6 +168,10 @@ void SimulateAVS(FlowLine &FL, int &i, int &j);
 void SimulateCLT(FlowLine &FL, int &i, int &j);
 void OverFlowManager(FlowLine &FL, int &i, int &j);
 bool AreaDownHelper(FlowLine &FL, int & i, int & j);
+
+
+//Output file functions
+void UnitTimeOutputs(FlowLine const FL, ofstream & UnitOutputs);
 
 //template <typename T
 ostream& operator<<(ostream& os, const vector<Unit*>& v);

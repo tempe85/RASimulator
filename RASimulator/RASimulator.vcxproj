@@ -131,6 +131,9 @@
     <Text Include="Units2.txt" />
     <Text Include="Units3.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Output.csv" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
