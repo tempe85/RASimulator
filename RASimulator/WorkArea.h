@@ -160,6 +160,7 @@ void CalculateUnitDownTime(FlowLine FL);
 ///WorkAreaSim Functions
 FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile);
 void SimulateFormboard(FlowLine &FL, int &i, int &j, ifstream & ReadUnitFile);
+void SimulateUA(FlowLine &FL, int &i, int &j);
 void SimulateBasicArea(FlowLine &FL, int &i, int &j);
 void SimulateBuild(FlowLine &FL, int &i, int &j);
 void SimulatePkg(FlowLine & FL, int & i, int & j);

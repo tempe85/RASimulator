@@ -127,13 +127,10 @@ void SimulateUA(FlowLine &FL, int &i, int &j)
 	}
 	else//Don't Skip
 	{
-		if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft) == true)
+		if (j == FL.TheWorkArea[i].Stations.size() - 1) //At end of UA
 		{
-			//first check if it's at the end of an area
-			if (j == FL.TheWorkArea[i].Stations.size() - 1)
+			if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft)) //if finished
 			{
-				//check if it's in CLT and needs settings
-				int k = i;
 				//needs to be moved to a new area, only if a spot is available
 				if (FL.TheWorkArea[i + 1].Stations[0] == nullptr) //there is a free spot
 				{
@@ -143,6 +140,7 @@ void SimulateUA(FlowLine &FL, int &i, int &j)
 						FL.TheWorkArea[i + 1].Stations[0] = FL.TheWorkArea[i].Stations[j]; //Moving pointer to the next area spot
 						FL.TheWorkArea[i].Stations[j] = nullptr; //Current spot is now free
 						//Need Timeleft for a unit reset
+				
 						FL.TheWorkArea[i + 1].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i + 1].AreaName, *(FL.TheWorkArea[i + 1].Stations[0]), FL, FL.TheWorkArea[i + 1].BuildT[0]);
 						//Check if unit needs rework
 						UnitReworkCheck(FL.TheWorkArea[i + 1], *(FL.TheWorkArea[i + 1].Stations[0]), FL.TheWorkArea[i + 1].Stations[0]->TimeLeft);
@@ -152,7 +150,6 @@ void SimulateUA(FlowLine &FL, int &i, int &j)
 						SendUnitToTS(FL, i, j, false);
 					}
 					//still need to change i and j
-					i = k;
 					OverFlowManager(FL, i, j);
 
 				}
@@ -165,34 +162,54 @@ void SimulateUA(FlowLine &FL, int &i, int &j)
 					OverFlowManager(FL, i, j);
 				}
 			}
-			else //Not at the end of an area, can't be moved to overflow! (unless in build line!)
+			else //end of UA but not finished
 			{
-
-				//next spot is FL.TheWorkArea[i].Stations[j+1];
-				//Check if next spot in the work area is free
-				if (FL.TheWorkArea[i].Stations[j + 1] == nullptr) //next spot is free
-				{
-					//move pointer
-					FL.TheWorkArea[i].Stations[j + 1] = FL.TheWorkArea[i].Stations[j];
-					FL.TheWorkArea[i].Stations[j] = nullptr; //free current spot
-					//Need to reset time left
-					//FL.TheWorkArea[i].Stations[j + 1]->TimeLeft = FL.TheWorkArea[i].BuildT[j + 1];
-					FL.TheWorkArea[i].Stations[j + 1]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i].AreaName, *(FL.TheWorkArea[i].Stations[j + 1]), FL, FL.TheWorkArea[i].BuildT[j + 1]);
-					OverFlowManager(FL, i, j);
-				}
-				else //next station is not free
-				{
-					//Need to add to area downtime
-					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkDay;
-					MoveInFlowline(FL, i, j, FL.WorkDay);
-				}
+				AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+				MoveInFlowline(FL, i, j, FL.WorkDay);
 			}
 		}
-		else //not finished, timeleft > 0
+		else //Not at the end of an area, see if next spot is open
 		{
-			AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
-			MoveInFlowline(FL, i, j, FL.WorkDay);
+			//next spot is FL.TheWorkArea[i].Stations[j+1];
+			//Check if next spot in the work area is free
+			if (FL.TheWorkArea[i].Stations[j + 1] == nullptr) //next spot is free
+			{
+				if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft))
+				{
+					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkTime;
+				}
+				else
+				{
+					//first adjust time left 
+					AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+				}
+				//move pointer
+				FL.TheWorkArea[i].Stations[j + 1] = FL.TheWorkArea[i].Stations[j];
+				FL.TheWorkArea[i].Stations[j] = nullptr; //free current spot
+				//Need to reset time left
+				
+				
+				OverFlowManager(FL, i, j);
+			}
+			else //next station is not free
+			{
+				//Need to add to area downtime
+				if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft))
+				{
+					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkTime;
+				}
+				else
+				{
+					AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+				}
+				MoveInFlowline(FL, i, j, FL.WorkDay);
+			}
 		}
+		////else //not finished, timeleft > 0
+		//{
+		//	AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+		//	MoveInFlowline(FL, i, j, FL.WorkDay);
+		//}
 	}
 }
 
@@ -414,6 +431,7 @@ void SimulateULT(FlowLine &FL, int &i, int &j)
 		}
 	}
 }
+
 
 void SimulateBuild(FlowLine &FL, int &i, int &j)
 {

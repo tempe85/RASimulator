@@ -138,18 +138,25 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 				FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]); 
 				FL.TheWorkArea[i].Stations[j]->TimeLeft -= ((FL.TheWorkArea[i].Stations[j]->TimeLeft) / ((FL.TheWorkArea[i].Stations.size()))* j);
 			}
-			else if (FL.TheWorkArea[i].AreaName == "UA" && FL.TheWorkArea[i].OverFlow.empty()) //UA needs kits available at the start, only the first time, overflow should have units, ~15
+			else if (FL.TheWorkArea[i].AreaName == "UA") //UA needs kits available at the start, only the first time, overflow should have units, ~15
 			{
-				FL.TheWorkArea[i].Stations[j]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i].AreaName, TestUnit, FL, FL.TheWorkArea[i].BuildT[j]);
-				for (int k = 0; k < 15; k++) //this loop determines overflow starting size for UA
+				FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]);
+				FL.TheWorkArea[i].Stations[j]->TimeLeft -= ((FL.TheWorkArea[i].Stations[j]->TimeLeft) / (FL.TheWorkArea[i].Stations.size()))* j;
+				if (FL.TheWorkArea[i].OverFlow.empty())
 				{
-					getline(ReadUnitFile, line);
-					//TestUnit = CheckUnitType(line, FL);
-					UnitPointer = new Unit;
-					*(UnitPointer) = CheckUnitType(line, FL);
-					FL.TheWorkArea[i].OverFlow.push_back(UnitPointer);
+					for (int k = 0; k < 15; k++) //this loop determines overflow starting size for UA
+					{
+						getline(ReadUnitFile, line);
+						//TestUnit = CheckUnitType(line, FL);
+						UnitPointer = new Unit;
+						*(UnitPointer) = CheckUnitType(line, FL);
+						FL.TheWorkArea[i].OverFlow.push_back(UnitPointer);
 
+					}
 				}
+
+				//FL.TheWorkArea[i].Stations[j]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i].AreaName, TestUnit, FL, FL.TheWorkArea[i].BuildT[j]);
+			
 			}
 			else //if it is not build or FB
 			{
@@ -245,7 +252,7 @@ void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k)
 	while (FL.WorkDay > 0)
 	{
 		CheckAreaDown = FL.WorkDay;
-		if (k == 2)
+		if (k == 2 || k == 3)
 		{
 			cout << "Time left in day: " << FL.WorkDay << endl;
 		}
@@ -260,11 +267,14 @@ void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k)
 			FL.CheckAreaDown = false;
 		}
 		SimulateFlowLine2(FL, ReadUnitFile);
-		if (k == 2)
+		if (k == 2 || k == 3)
 		{
 			PrintFlowLine(FL);
-			system("pause");
-			system("cls");
+			if (k == 2)
+			{
+				system("pause");
+				system("cls");
+			}
 		}
 	}
 	if (k == 1)
@@ -391,8 +401,7 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 		{
 			SimulatePkg(FL, i, j);
 		}
-		while (FL.TheWorkArea[i].AreaName == "UA" ||
-			FL.TheWorkArea[i].AreaName == "Rec" ||
+		while (FL.TheWorkArea[i].AreaName == "Rec" ||
 			FL.TheWorkArea[i].AreaName == "Prep" ||
 			FL.TheWorkArea[i].AreaName == "Doors" ||
 			FL.TheWorkArea[i].AreaName == "Ins" ||
@@ -400,6 +409,10 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 			)
 		{
 			SimulateBasicArea(FL, i, j);
+		}
+		while (FL.TheWorkArea[i].AreaName == "UA")
+		{
+			SimulateUA(FL, i, j);
 		}
 		while (FL.TheWorkArea[i].AreaName == "INIT")
 		{
@@ -518,7 +531,7 @@ int main (void)
 	CreateUnitList(TestFlow);
 	FillFlowLine(TestFlow, TestUnit, ReadUnitFile);
 //	PrintFlowLine(TestFlow);
-	cout << "Please select between (1) Simulate entire day and (2) Simulate by minute";
+	cout << "Please select between (1) Simulate entire day, (2) Simulate by minute (3) Test Mode";
 	cin >> k;
 	system("cls");
 	SimulateFlowHelper(TestFlow, ReadUnitFile, k);

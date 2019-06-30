@@ -12,7 +12,8 @@ UA::UA()
 {
 	AreaName = "UA";
 	Stations = vector<Unit*>(5);
-	BuildT = {20,20,20,20,20};
+	//BuildT = {20,20,20,20,20};
+	BuildT = { 60 };
 	ValueAdded = true;
 	ReworkCoefficient = 7;
 
