@@ -119,6 +119,8 @@ class FlowLine
 public:
 	double WorkDay = 480;
 	double WorkTime = 1;
+	int UnitMode;
+	int AssignUnitID = 1;
 	int CompletedUnitCounter = 0;
 	int unitGeneratorCounter = 0;
 	int userInputGenerator = 0;

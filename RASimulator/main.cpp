@@ -123,19 +123,32 @@ string GenerateUnitList(FlowLine & FL)
 		}
 		else if (FL.unitGeneratorCounter > 3 && FL.unitGeneratorCounter <= 7)
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD2";
+			}
 			return "DD1";
 		}
 		else if (FL.unitGeneratorCounter > 7 && FL.unitGeneratorCounter <= 11)
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD1";
+			}
 			return "SD2";
 		}
 		else
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD2";
+			}
 			return "DD2";
 		}
 	}
 	else if (FL.userInputGenerator == 2) //1,1,1,1
 	{
+
 		if (FL.unitGeneratorCounter > 3)
 		{
 			//reset unitCounter
@@ -147,14 +160,26 @@ string GenerateUnitList(FlowLine & FL)
 		}
 		else if (FL.unitGeneratorCounter == 1)
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD2";
+			}
 			return "DD1";
 		}
 		else if (FL.unitGeneratorCounter == 2)
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD1";
+			}
 			return "SD2";
 		}
 		else if (FL.unitGeneratorCounter == 3)
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD2";
+			}
 			return "DD2";
 		}
 	}
@@ -167,6 +192,10 @@ string GenerateUnitList(FlowLine & FL)
 		}
 		else if (random_number > 25 && random_number <= 50)
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD1";
+			}
 			return "DD1";
 		}
 		else if (random_number > 50  && random_number >= 75)
@@ -175,6 +204,10 @@ string GenerateUnitList(FlowLine & FL)
 		}
 		else //random_number between 76 and 100
 		{
+			if (FL.UnitMode == 1)
+			{
+				return "SD2";
+			}
 			return "DD2";
 		}
 	}
@@ -197,6 +230,10 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 			}
 			//getline(ReadUnitFile, line); use this if you want to fill flow from file
 			TestUnit = CheckUnitType(line, FL);
+			//Assign unit a unique ID number
+			TestUnit.IDnum = FL.AssignUnitID;
+			FL.AssignUnitID++;
+
 			FL.TheWorkArea[i].Stations[j] = new Unit;
 			*(FL.TheWorkArea[i].Stations[j]) = TestUnit;
 			//We Need to keep track of where the unit started on the flowline
@@ -235,9 +272,14 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 						{
 							FL.unitGeneratorCounter++;
 						}
-						TestUnit = CheckUnitType(line, FL);
+						//TestUnit = CheckUnitType(line, FL);
+						//Assign Unit ID number
+
 						UnitPointer = new Unit;
 						*(UnitPointer) = CheckUnitType(line, FL);
+						//Assign Unit ID number
+						UnitPointer->IDnum = FL.AssignUnitID;
+						FL.AssignUnitID++;
 						FL.TheWorkArea[i].OverFlow.push_back(UnitPointer);
 
 					}
@@ -392,6 +434,12 @@ void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j)
 	}
 	//getline(ReadUnitFile, TempLine); use this if you want to generate units from a file
 	TempUnit = CheckUnitType(TempLine, FL);
+
+	//Assign unit a unique ID number
+	TempUnit.IDnum = FL.AssignUnitID;
+	FL.AssignUnitID++;
+
+
 	FL.TheWorkArea[i].Stations[j] = new Unit;
 	*(FL.TheWorkArea[i].Stations[j]) = TempUnit;
 	//Keeping track of where a unit started
@@ -622,12 +670,19 @@ void CreateUnitList(FlowLine &FL)
 
 void ProgramInputsFromUser(FlowLine &FL, int &ListSimulator)
 {
-	cout << "Please select between (1) Simulate entire day, (2) Simulate by minute (3) Test Mode";
+
+	cout << "Please select between \n";
+	cout << "(1) Single Door mode\n";
+	cout << "(2) Dual Door mode\n";
+	cin >> FL.UnitMode;
+	system("cls");
+	cout << "Please select between \n(1) Simulate entire day, \n(2) Simulate by minute \n(3) Test Mode\n";
 	cin >> ListSimulator;
 	system("cls");
-	cout << "Please select how you want units to be generated in the line: (1) Four of each unit (2) One of each unit (3) Random Units";
+	cout << "Please select how you want units to be generated in the line: \n(1) Four of each unit \n(2) One of each unit \n(3) Random Units\n";
 	cin >> FL.userInputGenerator;
 	system("cls");
+
 }
 int main (void)
 {
@@ -660,9 +715,10 @@ int main (void)
 		UnitTimeOutputs(TestFlow, UnitOutputs);
 
 		system("cls");
-		cout << "Press 0 if you want to end the simulation " << endl;
-		cout << "Press 1 if you want to Sim 10 days" << endl;
-		cout << "Otherwise press any other key to do another 1 day sim" << endl;
+		cout << "Please select between: \n";
+		cout << "(0) End the simulation " << endl;
+		cout << "(1) Sim 10 days" << endl;
+		cout << "Otherwise press any other key to return to previous menus" << endl;
 		cin >> continueSim;
 		if (continueSim == 1)
 		{

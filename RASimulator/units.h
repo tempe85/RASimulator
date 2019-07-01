@@ -10,6 +10,7 @@ public:
 	double TotalUnitNoValueTime = 0;
 	double TotalUnitValueTime = 0;
 	double TotalUnitDownTime = 0;
+	int IDnum = 0;
 	//vector<double> AreaDownTime;
 	//int AreaDownTime[12];
 	unordered_map<string, double> DownTimeMap;

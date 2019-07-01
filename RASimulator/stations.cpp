@@ -42,8 +42,8 @@ AVS::AVS()
 ULTest::ULTest()
 {
 	AreaName = "ULT";
-	Stations = vector<Unit*>(1);
-	BuildT = {30};
+	Stations = vector<Unit*>(2);
+	BuildT = {30,30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
 	FailCoefficient = 5;
 	AreaDownCoefficient = 22;
@@ -64,8 +64,8 @@ Receiving::Receiving()
 Prep::Prep()
 {
 	AreaName = "Prep";
-	Stations = vector<Unit*>(1);
-	BuildT = {20};
+	Stations = vector<Unit*>(2);
+	BuildT = {10,10};
 	ReworkCoefficient = 1;
 	ValueAdded = true;
 }
@@ -101,8 +101,8 @@ Settings::Settings()
 Doors::Doors()
 {
 	AreaName = "Doors";
-	Stations = vector<Unit*>(1);
-	BuildT = {20};
+	Stations = vector<Unit*>(2);
+	BuildT = {10,10};
 	ReworkCoefficient = 1;
 	ValueAdded = true;
 }
