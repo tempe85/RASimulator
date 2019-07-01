@@ -104,6 +104,81 @@ double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTim
 	return TimeLeft;
 }
 
+string GenerateUnitList(FlowLine & FL)
+{
+	//Second is the type of list, first is the counter
+	//4,4,4,4
+	if (FL.userInputGenerator == 1)
+	{
+		if (FL.unitGeneratorCounter > 15)
+		{
+			//reset unitCounter
+			FL.unitGeneratorCounter = 0;
+		}
+		if (FL.unitGeneratorCounter <= 3)
+		{
+			return "SD1";
+		}
+		else if (3 < FL.unitGeneratorCounter >= 7)
+		{
+			return "DD1";
+		}
+		else if (7 < FL.unitGeneratorCounter >= 11)
+		{
+			return "SD2";
+		}
+		else
+		{
+			return "DD2";
+		}
+	}
+	else if (FL.userInputGenerator == 2) //1,1,1,1
+	{
+		if (FL.unitGeneratorCounter > 3)
+		{
+			//reset unitCounter
+			FL.unitGeneratorCounter = 0;
+		}
+		if (FL.unitGeneratorCounter == 0)
+		{
+			return "SD1";
+		}
+		else if (FL.unitGeneratorCounter == 1)
+		{
+			return "DD1";
+		}
+		else if (FL.unitGeneratorCounter == 2)
+		{
+			return "SD2";
+		}
+		else if (FL.unitGeneratorCounter == 3)
+		{
+			return "DD2";
+		}
+	}
+	else // (TypeOfList == 3) //random list, add exception later
+	{
+		int random_number = rand() % 100 + 1;
+		if (random_number <= 25)
+		{
+			return "SD1";
+		}
+		else if (25 < random_number >= 50)
+		{
+			return "DD1";
+		}
+		else if (50 < random_number >= 75)
+		{
+			return "SD2";
+		}
+		else //random_number between 76 and 100
+		{
+			return "DD2";
+		}
+	}
+
+}
+
 FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 {
 	string line;
@@ -113,7 +188,12 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 	{
 		for (int j = 0; j < FL.TheWorkArea[i].Stations.size(); j++)
 		{
-			getline(ReadUnitFile, line);
+			line = GenerateUnitList(FL);
+			if (FL.userInputGenerator == 1 || FL.userInputGenerator == 2) //after generation, increment counter unless using the random generator
+			{
+				FL.unitGeneratorCounter++;
+			}
+			//getline(ReadUnitFile, line); use this if you want to fill flow from file
 			TestUnit = CheckUnitType(line, FL);
 			FL.TheWorkArea[i].Stations[j] = new Unit;
 			*(FL.TheWorkArea[i].Stations[j]) = TestUnit;
@@ -146,8 +226,14 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 				{
 					for (int k = 0; k < 15; k++) //this loop determines overflow starting size for UA
 					{
-						getline(ReadUnitFile, line);
-						//TestUnit = CheckUnitType(line, FL);
+						//getline(ReadUnitFile, line);
+						
+						line = GenerateUnitList(FL);
+						if (FL.userInputGenerator == 1 || FL.userInputGenerator == 2) //after generation, increment counter unless using the random generator
+						{
+							FL.unitGeneratorCounter++;
+						}
+						TestUnit = CheckUnitType(line, FL);
 						UnitPointer = new Unit;
 						*(UnitPointer) = CheckUnitType(line, FL);
 						FL.TheWorkArea[i].OverFlow.push_back(UnitPointer);
@@ -245,14 +331,21 @@ void RemoveFirstOverFlowUnit(FlowLine &FL, int i)
 	return;
 }
 
-void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k)
+void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile)
 {
 	int CheckAreaDown;
+	int unitCounter = 0;
+	int ListSimulator = 0;
 	bool checkAreaDown = false;
+	Unit TestUnit;
+
+
+	ProgramInputsFromUser(FL, ListSimulator);
+	FillFlowLine(FL, TestUnit, ReadUnitFile);
 	while (FL.WorkDay > 0)
 	{
 		CheckAreaDown = FL.WorkDay;
-		if (k == 2 || k == 3)
+		if (ListSimulator == 2 || ListSimulator == 3)
 		{
 			cout << "Time left in day: " << FL.WorkDay << endl;
 		}
@@ -267,17 +360,17 @@ void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k)
 			FL.CheckAreaDown = false;
 		}
 		SimulateFlowLine2(FL, ReadUnitFile);
-		if (k == 2 || k == 3)
+		if (ListSimulator == 2 || ListSimulator == 3)
 		{
 			PrintFlowLine(FL);
-			if (k == 2)
+			if (ListSimulator == 2)
 			{
 				system("pause");
 				system("cls");
 			}
 		}
 	}
-	if (k == 1)
+	if (ListSimulator == 1)
 	{
 		PrintFlowLine(FL);
 		system("pause");
@@ -289,7 +382,12 @@ void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j)
 {
 	Unit TempUnit;
 	string TempLine;
-	getline(ReadUnitFile, TempLine);
+	TempLine = GenerateUnitList(FL);
+	if (FL.userInputGenerator == 1 || FL.userInputGenerator == 2)
+	{
+		FL.unitGeneratorCounter++;
+	}
+	//getline(ReadUnitFile, TempLine); use this if you want to generate units from a file
 	TempUnit = CheckUnitType(TempLine, FL);
 	FL.TheWorkArea[i].Stations[j] = new Unit;
 	*(FL.TheWorkArea[i].Stations[j]) = TempUnit;
@@ -510,18 +608,27 @@ void CreateUnitList(FlowLine &FL)
 
 	return;
 }
+
+void ProgramInputsFromUser(FlowLine &FL, int &ListSimulator)
+{
+	cout << "Please select between (1) Simulate entire day, (2) Simulate by minute (3) Test Mode";
+	cin >> ListSimulator;
+	system("cls");
+	cout << "Please select how you want units to be generated in the line: (1) Four of each unit (2) One of each unit (3) Random Units";
+	cin >> FL.userInputGenerator;
+	system("cls");
+}
 int main (void)
 {
 	FlowLine TestFlow;
-	Unit TestUnit;
 	vector<WorkArea> FL;
 	vector<string> UnitList;
 	ifstream ReadUnitFile("Units2.txt");
 	//ofstream UnitOutputs("Output.csv", fstream::app); USE THIS if you don't want to overwrite 
 	ofstream UnitOutputs("Output.csv"); 
-	int k;
-	srand(std::time(nullptr)); //seed for rand
 
+	srand(std::time(nullptr)); //seed for rand
+	
 
 
 	CreateFlowLine(FL);
@@ -529,12 +636,11 @@ int main (void)
 	TestFlow.TheWorkArea = FL;
 
 	CreateUnitList(TestFlow);
-	FillFlowLine(TestFlow, TestUnit, ReadUnitFile);
+
 //	PrintFlowLine(TestFlow);
-	cout << "Please select between (1) Simulate entire day, (2) Simulate by minute (3) Test Mode";
-	cin >> k;
+
 	system("cls");
-	SimulateFlowHelper(TestFlow, ReadUnitFile, k);
+	SimulateFlowHelper(TestFlow, ReadUnitFile);
 	UnitTimeOutputs(TestFlow, UnitOutputs);
 
 

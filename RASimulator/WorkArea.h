@@ -120,6 +120,8 @@ public:
 	double WorkDay = 480;
 	double WorkTime = 1;
 	int CompletedUnitCounter = 0;
+	int unitGeneratorCounter = 0;
+	int userInputGenerator = 0;
 	double TimeValueAdded = 0;
 	double TimeNoValueAdded = 0;
 	vector<WorkArea> TheWorkArea;
@@ -133,14 +135,14 @@ public:
 };
 //what we're going to do is simulate 10 minutes at a time
 
-
+FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile);
 void CreateFlowLine(vector<WorkArea> &FL);
 void RemoveFirstOverFlowUnit(FlowLine &FL, int i);
 //Unit* ReturnLastOverFlowUnit(FlowLine &FL, int i);
 bool OverFlowIsEmpty(FlowLine &FL, int i);
 void MoveToOverFlow(FlowLine &FL, int i, int j);
 FlowLine SimulateFlowLine(FlowLine &FL, ifstream & ReadUnitFile, int &i, int &j);
-void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int k);
+void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile);
 void PrintFlowLine(FlowLine FL);
 void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j);
 bool UnitFailCheck(WorkArea curArea);
@@ -156,6 +158,8 @@ void AdjustTimeLeft(FlowLine & FL, bool ValueAdded, Unit & curUnit);
 int CheckSettings(FlowLine const FL, int &k, const int j);
 void CountAreaDowntime(FlowLine &FL);
 void CalculateUnitDownTime(FlowLine FL);
+string GenerateUnitList(FlowLine & FL);
+void ProgramInputsFromUser(FlowLine & FL, int &ListSimulator);
 
 ///WorkAreaSim Functions
 FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile);

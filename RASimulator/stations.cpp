@@ -3,7 +3,7 @@
 FB::FB()
 {
 	AreaName = "FB";
-	Stations = vector<Unit*>(5);
+	Stations = vector<Unit*>(6);
 	BuildT = { 120 };
 	ValueAdded = true;
 	ReworkCoefficient = 5;
