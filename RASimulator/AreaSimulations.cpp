@@ -587,24 +587,37 @@ void AdjustTimeLeft(FlowLine & FL, bool ValueAdded, Unit & curUnit)
 {
 	curUnit.TimeLeft -= FL.WorkTime;
 	//TimeLeft -= FL.WorkTime;
-	if (ValueAdded)
+	if (curUnit.TotalUnitReworkTime == 0)
 	{
-		FL.TimeValueAdded += FL.WorkTime;
-		curUnit.TotalUnitValueTime += FL.WorkTime;
-		//Need to adjust in case TimeLeft is less than 0
-		if (curUnit.TimeLeft < 0)
+		if (ValueAdded)
 		{
-			FL.TimeValueAdded += curUnit.TimeLeft;
+			FL.TimeValueAdded += FL.WorkTime;
+			curUnit.TotalUnitValueTime += FL.WorkTime;
+			//Need to adjust in case TimeLeft is less than 0
+			if (curUnit.TimeLeft < 0)
+			{
+				FL.TimeValueAdded += curUnit.TimeLeft;
+			}
+		}
+		else //No value added
+		{
+			FL.TimeNoValueAdded += FL.WorkTime;
+			curUnit.TotalUnitNoValueTime += FL.WorkTime;
+			//Need to adjust in case TimeLeft is less than 0
+			if (curUnit.TimeLeft < 0)
+			{
+				FL.TimeNoValueAdded += curUnit.TimeLeft;
+			}
 		}
 	}
-	else //No value added
+	else
 	{
-		FL.TimeNoValueAdded += FL.WorkTime;
-		curUnit.TotalUnitNoValueTime += FL.WorkTime;
-		//Need to adjust in case TimeLeft is less than 0
-		if (curUnit.TimeLeft < 0)
+		FL.TimeUnitRework += FL.WorkTime;
+		curUnit.TotalUnitReworkTime -= FL.WorkTime;
+		if (curUnit.TotalUnitReworkTime <= 0)
 		{
-			FL.TimeNoValueAdded += curUnit.TimeLeft;
+			FL.TimeUnitRework += curUnit.TotalUnitReworkTime;
+			curUnit.TotalUnitReworkTime = 0;
 		}
 	}
 }
@@ -652,7 +665,7 @@ void OverFlowManager(FlowLine &FL, int &i, int &j)
 {
 	if (FL.TheWorkArea[i].Stations[j] == nullptr)
 	{
-		if (j == 0 || FL.TheWorkArea[i].AreaName == "ULT")
+		if (j == 0 || (FL.TheWorkArea[i].AreaName == "ULT"))
 		{
 			if (!OverFlowIsEmpty(FL, i)) // if the overflow for the area is not empty
 			{

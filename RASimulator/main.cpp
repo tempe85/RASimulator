@@ -94,7 +94,9 @@ void PrintFlowLine(FlowLine FL)
 	//}
 	cout << FL.CompletedUnits; 
 	cout << endl << "Value added minutes completed: " << FL.TimeValueAdded;
-	cout << endl << "No value added minutes completed: " << FL.TimeNoValueAdded << endl;
+	cout << endl << "No value added minutes completed: " << FL.TimeNoValueAdded;
+	cout << endl << "Unit rework time: " << FL.TimeUnitRework;
+	cout << endl << "Total work minutes completed: " << FL.TimeValueAdded + FL.TimeNoValueAdded << endl;
 }
 double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTime)
 {
@@ -119,11 +121,11 @@ string GenerateUnitList(FlowLine & FL)
 		{
 			return "SD1";
 		}
-		else if (3 < FL.unitGeneratorCounter >= 7)
+		else if (FL.unitGeneratorCounter > 3 && FL.unitGeneratorCounter <= 7)
 		{
 			return "DD1";
 		}
-		else if (7 < FL.unitGeneratorCounter >= 11)
+		else if (FL.unitGeneratorCounter > 7 && FL.unitGeneratorCounter <= 11)
 		{
 			return "SD2";
 		}
@@ -163,11 +165,11 @@ string GenerateUnitList(FlowLine & FL)
 		{
 			return "SD1";
 		}
-		else if (25 < random_number >= 50)
+		else if (random_number > 25 && random_number <= 50)
 		{
 			return "DD1";
 		}
-		else if (50 < random_number >= 75)
+		else if (random_number > 50  && random_number >= 75)
 		{
 			return "SD2";
 		}
@@ -331,17 +333,18 @@ void RemoveFirstOverFlowUnit(FlowLine &FL, int i)
 	return;
 }
 
-void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile)
+void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int continueSim, int const ListSimulator)
 {
 	int CheckAreaDown;
 	int unitCounter = 0;
-	int ListSimulator = 0;
 	bool checkAreaDown = false;
 	Unit TestUnit;
 
 
-	ProgramInputsFromUser(FL, ListSimulator);
-	FillFlowLine(FL, TestUnit, ReadUnitFile);
+	if (continueSim == 0)
+	{
+		FillFlowLine(FL, TestUnit, ReadUnitFile);
+	}
 	while (FL.WorkDay > 0)
 	{
 		CheckAreaDown = FL.WorkDay;
@@ -414,11 +417,19 @@ void CountAreaDowntime(FlowLine &FL)
 				{
 					FL.TheWorkArea[i].downtime += FL.WorkTime;
 				}
-				else
+				else //ULT
 				{
-					if (j = 1) //last test station in ULT, must change if you add more test stations to ULT!!
+					if (j = FL.TheWorkArea[i].Stations.size()) //last test station in ULT
 					{
-						if (FL.TheWorkArea[i].Stations[0] == nullptr && FL.TheWorkArea[i].Stations[1] == nullptr)
+						bool ULTEmpty = false;
+						for (int k = 0; k < FL.TheWorkArea[i].Stations.size(); k++)
+						{
+							if (FL.TheWorkArea[i].Stations[k] != nullptr)
+							{
+								ULTEmpty = true;
+							}
+						}
+						if (ULTEmpty == true)
 						{
 							FL.TheWorkArea[i].downtime += FL.WorkTime;
 						}
@@ -626,7 +637,7 @@ int main (void)
 	ifstream ReadUnitFile("Units2.txt");
 	//ofstream UnitOutputs("Output.csv", fstream::app); USE THIS if you don't want to overwrite 
 	ofstream UnitOutputs("Output.csv"); 
-
+	
 	srand(std::time(nullptr)); //seed for rand
 	
 
@@ -639,9 +650,29 @@ int main (void)
 
 //	PrintFlowLine(TestFlow);
 
+	int continueSim = 0;
+	int ListSimulator = 0;
 	system("cls");
-	SimulateFlowHelper(TestFlow, ReadUnitFile);
-	UnitTimeOutputs(TestFlow, UnitOutputs);
+	do
+	{
+		ProgramInputsFromUser(TestFlow, ListSimulator);
+		SimulateFlowHelper(TestFlow, ReadUnitFile, continueSim, ListSimulator);
+		UnitTimeOutputs(TestFlow, UnitOutputs);
+
+		system("cls");
+		cout << "Press 0 if you want to end the simulation " << endl;
+		cout << "Press 1 if you want to Sim 10 days" << endl;
+		cout << "Otherwise press any other key to do another 1 day sim" << endl;
+		cin >> continueSim;
+		if (continueSim == 1)
+		{
+			TestFlow.WorkDay = 480 * 10;
+		}
+		else
+		{
+			TestFlow.WorkDay = 480;
+		}
+	} while (continueSim != 0);
 
 
 	UnitOutputs.close();

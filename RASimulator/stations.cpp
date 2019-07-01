@@ -11,7 +11,7 @@ FB::FB()
 UA::UA()
 {
 	AreaName = "UA";
-	Stations = vector<Unit*>(5);
+	Stations = vector<Unit*>(4);
 	//BuildT = {20,20,20,20,20};
 	BuildT = { 60 };
 	ValueAdded = true;
@@ -42,10 +42,10 @@ AVS::AVS()
 ULTest::ULTest()
 {
 	AreaName = "ULT";
-	Stations = vector<Unit*>(2);
-	BuildT = {30, 30};
+	Stations = vector<Unit*>(1);
+	BuildT = {30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
-	FailCoefficient = 2;
+	FailCoefficient = 5;
 	AreaDownCoefficient = 22;
 	ReworkCoefficient = 5;
 	ValueAdded = false;
@@ -73,8 +73,8 @@ Prep::Prep()
 Build::Build()
 {
 	AreaName = "Build";
-	Stations = vector<Unit*>(5);
-	BuildT = { 100 };
+	Stations = vector<Unit*>(6);
+	BuildT = { 90 };
 	ReworkCoefficient = 5;
 	ValueAdded = true;
 }
@@ -144,7 +144,7 @@ bool UnitFailCheck(WorkArea curArea)
 	return false;
 }
 
-void UnitReworkCheck(WorkArea curArea, Unit curUnit, double & unitBuildTime)
+void UnitReworkCheck(WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
 {
 	int random_number = rand() % 100 + 1;
 	if (random_number <= curArea.ReworkCoefficient)
@@ -155,18 +155,21 @@ void UnitReworkCheck(WorkArea curArea, Unit curUnit, double & unitBuildTime)
 		if (random_number <= 33)
 		{
 			cout << " for " << unitBuildTime * .2 << " extra minutes!";
+			curUnit.TotalUnitReworkTime = unitBuildTime * .2;
 			unitBuildTime += unitBuildTime * .2;
 		}
 		//medium rework
 		else if (random_number > 33 && random_number < 66)
 		{
 			cout << " for " << unitBuildTime * .5 << " extra minutes!";
+			curUnit.TotalUnitReworkTime = unitBuildTime * .5;
 			unitBuildTime += unitBuildTime * .5;
 		}
 		//long rework
 		else
 		{
 			cout << " for " << unitBuildTime * 1.0 << " extra minutes!";
+			curUnit.TotalUnitReworkTime = unitBuildTime * 1.0;
 			unitBuildTime += unitBuildTime * 1.0;
 		}
 

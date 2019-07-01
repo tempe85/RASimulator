@@ -124,6 +124,7 @@ public:
 	int userInputGenerator = 0;
 	double TimeValueAdded = 0;
 	double TimeNoValueAdded = 0;
+	double TimeUnitRework = 0;
 	vector<WorkArea> TheWorkArea;
 	vector<pair <string, Unit>> UnitList;
 	vector<Unit*> ReWork;
@@ -142,11 +143,11 @@ void RemoveFirstOverFlowUnit(FlowLine &FL, int i);
 bool OverFlowIsEmpty(FlowLine &FL, int i);
 void MoveToOverFlow(FlowLine &FL, int i, int j);
 FlowLine SimulateFlowLine(FlowLine &FL, ifstream & ReadUnitFile, int &i, int &j);
-void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile);
+void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int continueSim, int const ListSimulator);
 void PrintFlowLine(FlowLine FL);
 void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j);
 bool UnitFailCheck(WorkArea curArea);
-void UnitReworkCheck(WorkArea curArea, Unit curUnit, double & unitBuildTime);
+void UnitReworkCheck(WorkArea curArea, Unit & curUnit, double & unitBuildTime);
 void PrintUnitFail(Unit FailedUnit, WorkArea curArea);
 void SendUnitToTS(FlowLine &FL, const int i, const int j, const bool IsOverFlow);
 

@@ -6,6 +6,7 @@ public:
 	string UnitName = "TempUnitName";
 	unordered_map<string, double> BuildTimeMap;
 	double TimeLeft = 0;
+	double TotalUnitReworkTime = 0;
 	double TotalUnitNoValueTime = 0;
 	double TotalUnitValueTime = 0;
 	double TotalUnitDownTime = 0;
