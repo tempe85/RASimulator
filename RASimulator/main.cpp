@@ -356,9 +356,15 @@ void MoveInFlowline (FlowLine &FL, int &i, int &j, double & WorkdayTime)
 
 void MoveToOverFlow(FlowLine &FL, int i, int j)
 {
-
-	FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-	FL.TheWorkArea[i].Stations[j] = nullptr;
+	if (FL.TheWorkArea[i + 1].OverFlow.size() < FL.TheWorkArea[i + 1].MaxOverFlowSize)
+	{
+		FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
+		FL.TheWorkArea[i].Stations[j] = nullptr;
+	}
+	else
+	{
+		//FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime++;
+	}
 
 	return;
 }
@@ -503,7 +509,7 @@ void CalculateUnitDownTime(FlowLine FL)
 			{
 				if (it->AreaName != "UA") //not counting FB downtime for now
 				{
-					(*it1)->TotalUnitDownTime += FL.WorkTime;
+					//(*it1)->TotalUnitDownTime += FL.WorkTime;
 				}
 			}
 		}
@@ -670,6 +676,19 @@ void CreateUnitList(FlowLine &FL)
 
 void ProgramInputsFromUser(FlowLine &FL, int &ListSimulator)
 {
+	int OverFlowType;
+	cout << "Please select between \n";
+	cout << "(1) Unlimited overflows\n";
+	cout << "(2) Limited overflows \n";
+	cin >> OverFlowType;
+	if (OverFlowType == 1)
+	{
+		for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+		{
+			it->MaxOverFlowSize = 1000;
+		}
+	}
+	system("cls");
 
 	cout << "Please select between \n";
 	cout << "(1) Single Door mode\n";
@@ -714,7 +733,7 @@ int main (void)
 		SimulateFlowHelper(TestFlow, ReadUnitFile, continueSim, ListSimulator);
 		UnitTimeOutputs(TestFlow, UnitOutputs);
 
-		system("cls");
+		//system("cls");
 		cout << "Please select between: \n";
 		cout << "(0) End the simulation " << endl;
 		cout << "(1) Sim 10 days" << endl;
@@ -728,6 +747,8 @@ int main (void)
 		{
 			TestFlow.WorkDay = 480;
 		}
+
+		system("pause");
 	} while (continueSim != 0);
 
 

@@ -79,8 +79,7 @@ void SimulateBasicArea(FlowLine &FL, int &i, int &j)
 				else //Next spot is not free
 				{
 					//Move to Next area overflow
-					FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-					FL.TheWorkArea[i].Stations[j] = nullptr;
+					MoveToOverFlow(FL, i, j);
 					//still need to change i and j
 					OverFlowManager(FL, i, j);
 				}
@@ -104,7 +103,7 @@ void SimulateBasicArea(FlowLine &FL, int &i, int &j)
 				else //next station is not free
 				{
 					//Need to add to area downtime
-					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkDay;
+					//FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkDay;
 					MoveInFlowline(FL, i, j, FL.WorkDay);
 				}
 			}
@@ -127,22 +126,25 @@ void SimulateUA(FlowLine &FL, int &i, int &j)
 	}
 	else//Don't Skip
 	{
-		if (j == FL.TheWorkArea[i].Stations.size() - 1) //At end of UA
+		if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft) == true)
 		{
-			if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft)) //if finished
+			//first check if it's at the end of an area
+			if (j == FL.TheWorkArea[i].Stations.size() - 1)
 			{
+				//check if it's in CLT and needs settings
+				int k = i;
 				//needs to be moved to a new area, only if a spot is available
 				if (FL.TheWorkArea[i + 1].Stations[0] == nullptr) //there is a free spot
 				{
 					//first check if the unit fails
 					if (UnitFailCheck(FL.TheWorkArea[i + 1]) == false)
 					{
+
 						FL.TheWorkArea[i + 1].Stations[0] = FL.TheWorkArea[i].Stations[j]; //Moving pointer to the next area spot
 						FL.TheWorkArea[i].Stations[j] = nullptr; //Current spot is now free
 						//Need Timeleft for a unit reset
-				
 						FL.TheWorkArea[i + 1].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i + 1].AreaName, *(FL.TheWorkArea[i + 1].Stations[0]), FL, FL.TheWorkArea[i + 1].BuildT[0]);
-						//Check if unit needs rework
+						//Check if rework needed
 						UnitReworkCheck(FL.TheWorkArea[i + 1], *(FL.TheWorkArea[i + 1].Stations[0]), FL.TheWorkArea[i + 1].Stations[0]->TimeLeft);
 					}
 					else //Unit failed is true
@@ -150,66 +152,50 @@ void SimulateUA(FlowLine &FL, int &i, int &j)
 						SendUnitToTS(FL, i, j, false);
 					}
 					//still need to change i and j
+					i = k;
 					OverFlowManager(FL, i, j);
 
 				}
 				else //Next spot is not free
 				{
-					//Move to Next area overflow
-					FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-					FL.TheWorkArea[i].Stations[j] = nullptr;
+					//Move to Next area overflow if it can fit
+					MoveToOverFlow(FL, i, j);
 					//still need to change i and j
 					OverFlowManager(FL, i, j);
 				}
 			}
-			else //end of UA but not finished
+			else //Not at the end of an area, can't be moved to overflow! (unless in build line!)
 			{
-				AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
-				MoveInFlowline(FL, i, j, FL.WorkDay);
+
+				//next spot is FL.TheWorkArea[i].Stations[j+1];
+				//Check if next spot in the work area is free
+				if (FL.TheWorkArea[i].Stations[j + 1] == nullptr) //next spot is free
+				{
+					//move pointer
+					FL.TheWorkArea[i].Stations[j + 1] = FL.TheWorkArea[i].Stations[j];
+					FL.TheWorkArea[i].Stations[j] = nullptr; //free current spot
+					//Need to reset time left
+					//FL.TheWorkArea[i].Stations[j + 1]->TimeLeft = FL.TheWorkArea[i].BuildT[j + 1];
+					FL.TheWorkArea[i].Stations[j + 1]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i].AreaName, *(FL.TheWorkArea[i].Stations[j + 1]), FL, FL.TheWorkArea[i].BuildT[j + 1]);
+					//do a rework check
+					UnitReworkCheck(FL.TheWorkArea[i], *(FL.TheWorkArea[i].Stations[j+1]), FL.TheWorkArea[i].Stations[j+1]->TimeLeft);
+					//May put rework check here in the future??
+					OverFlowManager(FL, i, j);
+				}
+				else //next station is not free
+				{
+					//Need to add to area downtime
+					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkDay;
+					MoveInFlowline(FL, i, j, FL.WorkDay);
+				}
 			}
 		}
-		else //Not at the end of an area, see if next spot is open
+		else //not finished, timeleft > 0
 		{
-			//next spot is FL.TheWorkArea[i].Stations[j+1];
-			//Check if next spot in the work area is free
-			if (FL.TheWorkArea[i].Stations[j + 1] == nullptr) //next spot is free
-			{
-				if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft))
-				{
-					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkTime;
-				}
-				else
-				{
-					//first adjust time left 
-					AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
-				}
-				//move pointer
-				FL.TheWorkArea[i].Stations[j + 1] = FL.TheWorkArea[i].Stations[j];
-				FL.TheWorkArea[i].Stations[j] = nullptr; //free current spot
-				//Need to reset time left
-				
-				
-				OverFlowManager(FL, i, j);
-			}
-			else //next station is not free
-			{
-				//Need to add to area downtime
-				if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft))
-				{
-					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkTime;
-				}
-				else
-				{
-					AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
-				}
-				MoveInFlowline(FL, i, j, FL.WorkDay);
-			}
+			//Add to work time completed
+			AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+			MoveInFlowline(FL, i, j, FL.WorkDay);
 		}
-		////else //not finished, timeleft > 0
-		//{
-		//	AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
-		//	MoveInFlowline(FL, i, j, FL.WorkDay);
-		//}
 	}
 }
 
@@ -258,8 +244,7 @@ void SimulateCLT(FlowLine &FL, int &i, int &j)
 				else //Next spot is not free
 				{
 					//Move to Next area overflow
-					FL.TheWorkArea[k + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-					FL.TheWorkArea[i].Stations[j] = nullptr;
+					MoveToOverFlow(FL, i, j);
 
 					//Need to add to downtime
 					//still need to change i and j
@@ -338,8 +323,7 @@ void SimulateAVS(FlowLine &FL, int &i, int &j)
 				else //No spot in ULT is free
 				{
 					//Move to Next area overflow
-					FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-					FL.TheWorkArea[i].Stations[j] = nullptr;
+					MoveToOverFlow(FL, i, j);
 
 					//Need to add to downtime
 					//FL.TheWorkArea[i].downtime += FL.WorkTime; //No need with overflow at this time
@@ -415,8 +399,7 @@ void SimulateULT(FlowLine &FL, int &i, int &j)
 			else //Next spot is not free
 			{
 				//Move to Next area overflow
-				FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-				FL.TheWorkArea[i].Stations[j] = nullptr;
+				MoveToOverFlow(FL, i, j);
 
 				//Need to add to downtime
 				//FL.TheWorkArea[i].downtime += FL.WorkTime; //No need with overflow at this time
@@ -473,8 +456,7 @@ void SimulateBuild(FlowLine &FL, int &i, int &j)
 				else //Next spot is not free
 				{
 					//Move to Next area overflow
-					FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
-					FL.TheWorkArea[i].Stations[j] = nullptr;
+					MoveToOverFlow(FL, i, j);
 
 					//Need to add to downtime
 					//FL.TheWorkArea[i].downtime += FL.WorkTime; //No need with overflow at this time
@@ -502,6 +484,9 @@ void SimulateBuild(FlowLine &FL, int &i, int &j)
 						{
 							FL.TheWorkArea[i].Stations[k] = FL.TheWorkArea[i].Stations[j];
 							FL.TheWorkArea[i].Stations[j] = nullptr;
+							//do a rework check
+							double unitReworkBuildTime = (FL.TheWorkArea[i].Stations[k]->TimeLeft) / (FL.TheWorkArea[i].Stations.size());
+							UnitReworkCheck(FL.TheWorkArea[i], *(FL.TheWorkArea[i].Stations[k]), unitReworkBuildTime);
 							k = j; //break out of loop
 						}
 					}

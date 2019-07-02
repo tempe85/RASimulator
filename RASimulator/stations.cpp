@@ -7,15 +7,17 @@ FB::FB()
 	BuildT = { 120 };
 	ValueAdded = true;
 	ReworkCoefficient = 5;
+	MaxOverFlowSize = 0;
 }
 UA::UA()
 {
 	AreaName = "UA";
 	Stations = vector<Unit*>(4);
-	//BuildT = {20,20,20,20,20};
-	BuildT = { 60 };
+	BuildT = {20,20,20,20,20};
+	//BuildT = { 60 };
 	ValueAdded = true;
 	ReworkCoefficient = 7;
+	MaxOverFlowSize = 20;
 
 }
 
@@ -26,8 +28,9 @@ INIT::INIT()
 	BuildT = { 10 };
 	FailCoefficient = 1;
 	ReworkCoefficient = 2;
-	AreaDownCoefficient = 22;
+	AreaDownCoefficient = 11;
 	ValueAdded = false;
+	MaxOverFlowSize = 1;
 }
 AVS::AVS()
 {
@@ -38,17 +41,19 @@ AVS::AVS()
 	ReworkCoefficient = 8;
 	AreaDownCoefficient = 22;
 	ValueAdded = false;
+	MaxOverFlowSize = 1;
 }
 ULTest::ULTest()
 {
 	AreaName = "ULT";
-	Stations = vector<Unit*>(2);
-	BuildT = {30,30};
+	Stations = vector<Unit*>(1);
+	BuildT = {30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
 	FailCoefficient = 5;
 	AreaDownCoefficient = 22;
 	ReworkCoefficient = 5;
 	ValueAdded = false;
+	MaxOverFlowSize = 1;
 }
 
 
@@ -59,15 +64,17 @@ Receiving::Receiving()
 	BuildT = {20};
 	ReworkCoefficient = 1;
 	ValueAdded = true;
+	MaxOverFlowSize = 3;
 }
 
 Prep::Prep()
 {
 	AreaName = "Prep";
-	Stations = vector<Unit*>(2);
-	BuildT = {10,10};
+	Stations = vector<Unit*>(1);
+	BuildT = {20};
 	ReworkCoefficient = 1;
 	ValueAdded = true;
+	MaxOverFlowSize = 1;
 }
 
 Build::Build()
@@ -77,6 +84,7 @@ Build::Build()
 	BuildT = { 90 };
 	ReworkCoefficient = 5;
 	ValueAdded = true;
+	MaxOverFlowSize = 2;
 }
 
 CLTest::CLTest()
@@ -88,6 +96,7 @@ CLTest::CLTest()
 	ReworkCoefficient = 8;
 	AreaDownCoefficient = 22;
 	ValueAdded = false;
+	MaxOverFlowSize = 1;
 }
 
 Settings::Settings()
@@ -97,14 +106,16 @@ Settings::Settings()
 	BuildT = { 20 };
 	ReworkCoefficient = 5;
 	ValueAdded = false;
+	MaxOverFlowSize = 1;
 }
 Doors::Doors()
 {
 	AreaName = "Doors";
-	Stations = vector<Unit*>(2);
-	BuildT = {10,10};
+	Stations = vector<Unit*>(1);
+	BuildT = {20};
 	ReworkCoefficient = 1;
 	ValueAdded = true;
+	MaxOverFlowSize = 2;
 }
 
 Inspection::Inspection()
@@ -114,6 +125,7 @@ Inspection::Inspection()
 	BuildT = {20};
 	ReworkCoefficient = 8;
 	ValueAdded = false;
+	MaxOverFlowSize = 1;
 }
 
 Packaging::Packaging()
@@ -122,6 +134,7 @@ Packaging::Packaging()
 	Stations = vector<Unit*>(1);
 	BuildT = {20};
 	ValueAdded = true;
+	MaxOverFlowSize = 3;
 }
 
 
@@ -152,21 +165,21 @@ void UnitReworkCheck(WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
 		cout << endl << curUnit.UnitName << " is being reworked in " << curArea.AreaName;
 		random_number = rand() % 100 + 1;
 		//short rework
-		if (random_number <= 33)
+		if (random_number <= 50) //50% odds short rework
 		{
 			cout << " for " << unitBuildTime * .2 << " extra minutes!";
 			curUnit.TotalUnitReworkTime = unitBuildTime * .2;
 			unitBuildTime += unitBuildTime * .2;
 		}
 		//medium rework
-		else if (random_number > 33 && random_number < 66)
+		else if (random_number > 50 && random_number <= 90) //40% odds medium rework
 		{
 			cout << " for " << unitBuildTime * .5 << " extra minutes!";
 			curUnit.TotalUnitReworkTime = unitBuildTime * .5;
 			unitBuildTime += unitBuildTime * .5;
 		}
 		//long rework
-		else
+		else //10% odds long rework
 		{
 			cout << " for " << unitBuildTime * 1.0 << " extra minutes!";
 			curUnit.TotalUnitReworkTime = unitBuildTime * 1.0;
@@ -180,7 +193,7 @@ void UnitReworkCheck(WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
 }
 void PrintUnitFail(Unit FailedUnit, WorkArea curArea)
 {
-	cout << endl <<  FailedUnit.UnitName << " has been sent to rework from " << curArea.AreaName << endl;
+	cout << endl <<  FailedUnit.UnitName << " has been sent to troubleshoot from " << curArea.AreaName << endl;
 
 }
 void SendUnitToTS(FlowLine &FL, const int i, const int j, const bool IsOverFlow)

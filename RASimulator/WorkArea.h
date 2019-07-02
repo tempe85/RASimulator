@@ -28,6 +28,7 @@ public:
 	int AreaDownCoefficient = 0;
 	bool AreaDown = false;
 	int AreaDownTimer = 0;
+	int MaxOverFlowSize = 0;
 
 	bool ValueAdded;
 	bool CheckIfAreaDown();

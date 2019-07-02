@@ -280,3 +280,98 @@
 //		//}
 //	}
 //}
+
+//void SimulateUA(FlowLine &FL, int &i, int &j)
+//{
+//	//If the Station is already NULL we must skip it
+//	if (FL.TheWorkArea[i].Stations[j] == nullptr)
+//	{
+//		OverFlowManager(FL, i, j);
+//	}
+//	else//Don't Skip
+//	{
+//		if (j == FL.TheWorkArea[i].Stations.size() - 1) //At end of UA
+//		{
+//			if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft)) //if finished
+//			{
+//				//needs to be moved to a new area, only if a spot is available
+//				if (FL.TheWorkArea[i + 1].Stations[0] == nullptr) //there is a free spot
+//				{
+//					//first check if the unit fails
+//					if (UnitFailCheck(FL.TheWorkArea[i + 1]) == false)
+//					{
+//						FL.TheWorkArea[i + 1].Stations[0] = FL.TheWorkArea[i].Stations[j]; //Moving pointer to the next area spot
+//						FL.TheWorkArea[i].Stations[j] = nullptr; //Current spot is now free
+//						//Need Timeleft for a unit reset
+//
+//						FL.TheWorkArea[i + 1].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i + 1].AreaName, *(FL.TheWorkArea[i + 1].Stations[0]), FL, FL.TheWorkArea[i + 1].BuildT[0]);
+//						//Check if unit needs rework
+//						UnitReworkCheck(FL.TheWorkArea[i + 1], *(FL.TheWorkArea[i + 1].Stations[0]), FL.TheWorkArea[i + 1].Stations[0]->TimeLeft);
+//					}
+//					else //Unit failed is true
+//					{
+//						SendUnitToTS(FL, i, j, false);
+//					}
+//					//still need to change i and j
+//					OverFlowManager(FL, i, j);
+//
+//				}
+//				else //Next spot is not free
+//				{
+//					//Move to Next area overflow
+//					FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
+//					FL.TheWorkArea[i].Stations[j] = nullptr;
+//					//still need to change i and j
+//					OverFlowManager(FL, i, j);
+//				}
+//			}
+//			else //end of UA but not finished
+//			{
+//				AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+//				MoveInFlowline(FL, i, j, FL.WorkDay);
+//			}
+//		}
+//		else //Not at the end of an area, see if next spot is open
+//		{
+//			//next spot is FL.TheWorkArea[i].Stations[j+1];
+//			//Check if next spot in the work area is free
+//			if (FL.TheWorkArea[i].Stations[j + 1] == nullptr) //next spot is free
+//			{
+//				if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft))
+//				{
+//					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkTime;
+//				}
+//				else
+//				{
+//					//first adjust time left 
+//					AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+//				}
+//				//move pointer
+//				FL.TheWorkArea[i].Stations[j + 1] = FL.TheWorkArea[i].Stations[j];
+//				FL.TheWorkArea[i].Stations[j] = nullptr; //free current spot
+//				//Need to reset time left
+//
+//
+//				OverFlowManager(FL, i, j);
+//			}
+//			else //next station is not free
+//			{
+//				//Need to add to area downtime
+//				if (CheckIfFinished(FL.TheWorkArea[i].Stations[j]->TimeLeft))
+//				{
+//					FL.TheWorkArea[i].Stations[j]->TotalUnitDownTime += FL.WorkTime;
+//				}
+//				else
+//				{
+//					AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+//				}
+//				MoveInFlowline(FL, i, j, FL.WorkDay);
+//			}
+//		}
+//		////else //not finished, timeleft > 0
+//		//{
+//		//	AdjustTimeLeft(FL, FL.TheWorkArea[i].ValueAdded, *(FL.TheWorkArea[i].Stations[j]));
+//		//	MoveInFlowline(FL, i, j, FL.WorkDay);
+//		//}
+//	}
+//}
