@@ -148,11 +148,16 @@ void MoveToOverFlow(FlowLine &FL, int i, int j);
 FlowLine SimulateFlowLine(FlowLine &FL, ifstream & ReadUnitFile, int &i, int &j);
 void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int continueSim, int const ListSimulator);
 void PrintFlowLine(FlowLine FL);
+void PrintFailCheckData(FlowLine FL, int i, int j);
 void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j);
-bool UnitFailCheck(WorkArea curArea);
+void UnitFailCheck(WorkArea const curArea, Unit & curUnit);
+void UnitFailCheckHelper(WorkArea const curArea, Unit & curUnit);
+void UnitFailCheckReset(Unit & curUnit);
 void UnitReworkCheck(WorkArea curArea, Unit & curUnit, double & unitBuildTime);
 void PrintUnitFail(Unit FailedUnit, WorkArea curArea);
-void SendUnitToTS(FlowLine &FL, const int i, const int j, const bool IsOverFlow);
+void SendUnitToTS(FlowLine &FL, const int i, const int j);
+void MoveUnitToNewWorkArea(FlowLine &FL, const int i, const int j);
+void MoveUnitToNextStation(FlowLine &FL, const int i, const int j);
 
 bool CheckIfFinished(double TimeLeft);
 double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTime);
@@ -164,6 +169,9 @@ void CountAreaDowntime(FlowLine &FL);
 void CalculateUnitDownTime(FlowLine FL);
 string GenerateUnitList(FlowLine & FL);
 void ProgramInputsFromUser(FlowLine & FL, int &ListSimulator);
+void UpdateCompletedAreas(Unit &curUnit, WorkArea const curWorkArea);
+vector<string> CreateAreaOrderString(FlowLine & FL);
+
 
 ///WorkAreaSim Functions
 FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile);

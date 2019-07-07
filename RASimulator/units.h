@@ -10,10 +10,27 @@ public:
 	double TotalUnitNoValueTime = 0;
 	double TotalUnitValueTime = 0;
 	double TotalUnitDownTime = 0;
+	tuple <bool, bool, int> UnitFailCheckVariable = { false, false, 0 }; // <0> Has a unit been check?? <1> Has a unit failed? <2> Unit fail counter
+	pair <bool, int> UnitFailVar = { false, 0 };
 	int IDnum = 0;
 	//vector<double> AreaDownTime;
 	//int AreaDownTime[12];
 	unordered_map<string, double> DownTimeMap;
+	unordered_map<string, bool> WorkAreasCompleted = {
+			{ "FB", false},
+			{ "UA", false },
+			{ "INIT", false },
+			{ "AVS", false },
+			{ "ULT", false },
+			{ "Rec", false},
+			{ "Prep", false },
+			{ "Build", false },
+			{ "CLT", false },
+			{"Settings", false},
+			{ "Doors", false },
+			{ "Ins", false },
+			{ "Pkg", false },
+	};
 	string AreaStart;
 	Unit() {};
 	bool Settings = false; //default 

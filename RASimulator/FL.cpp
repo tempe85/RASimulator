@@ -45,6 +45,7 @@ void CreateFlowLine(vector<WorkArea> &FL)
 	FL.push_back(*(new Inspection));
 	FL.push_back(*(new Packaging));
 	//pointer -> FL.push_back(new Packaging);
+
 	return;
 }
 

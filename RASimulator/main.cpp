@@ -23,6 +23,26 @@ string CheckAreaName(string line, FlowLine FL, int i)
 	return line;
 }
 
+void PrintFailCheckData(FlowLine FL, int i, int j)
+{
+	if (get<0>(FL.TheWorkArea[i].Stations[j]->UnitFailCheckVariable) == true)
+	{
+		cout << "(T)";
+	}
+	else
+	{
+		cout << "(F)";
+	}
+	if (get<1>(FL.TheWorkArea[i].Stations[j]->UnitFailCheckVariable) == true)
+	{
+		cout << "(T)";
+	}
+	else
+	{
+		cout << "(F)";
+	}
+	cout << "(" << get<2>(FL.TheWorkArea[i].Stations[j]->UnitFailCheckVariable) << ")";
+}
 void PrintFlowLine(FlowLine FL)
 {
 	int j = 0;
@@ -37,6 +57,7 @@ void PrintFlowLine(FlowLine FL)
 			if (!(FL.TheWorkArea[i].Stations[j] == nullptr))
 			{
 				cout << FL.TheWorkArea[i].Stations[j]->UnitName;
+				//PrintFailCheckData(FL, i, j);
 				cout << "(" << FL.TheWorkArea[i].Stations[j]->TimeLeft << "),";
 			}
 			else //empty
@@ -219,6 +240,8 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 	string line;
 	Unit *UnitPointer;
 	int i = 0;
+	vector<string> AreaNames = CreateAreaOrderString(FL);
+
 	while (i < FL.TheWorkArea.size())
 	{
 		for (int j = 0; j < FL.TheWorkArea[i].Stations.size(); j++)
@@ -238,6 +261,24 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 			*(FL.TheWorkArea[i].Stations[j]) = TestUnit;
 			//We Need to keep track of where the unit started on the flowline
 			FL.TheWorkArea[i].Stations[j]->AreaStart = FL.TheWorkArea[i].AreaName;
+
+			string TempString;
+
+			//Set completed area map for unit
+			if (FL.TheWorkArea[i].Stations[j]->AreaStart != "FB")
+			{
+				for (int k = 0; k < AreaNames.size(); k++)
+				{
+					if (FL.TheWorkArea[i].AreaName == AreaNames[k])
+					{
+						k = AreaNames.size(); //breaking out of loop
+					}
+					else
+					{
+						FL.TheWorkArea[i].Stations[j]->WorkAreasCompleted[AreaNames[k]] = true;
+					}
+				}
+			}
 			//There needs to be a build and FB exception
 			if (FL.TheWorkArea[i].AreaName == "Build")
 			{
@@ -277,6 +318,7 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 
 						UnitPointer = new Unit;
 						*(UnitPointer) = CheckUnitType(line, FL);
+						UnitPointer->WorkAreasCompleted["FB"] = true;
 						//Assign Unit ID number
 						UnitPointer->IDnum = FL.AssignUnitID;
 						FL.AssignUnitID++;
@@ -356,6 +398,8 @@ void MoveInFlowline (FlowLine &FL, int &i, int &j, double & WorkdayTime)
 
 void MoveToOverFlow(FlowLine &FL, int i, int j)
 {
+	//Reset unit fail checks
+	UnitFailCheckReset(*(FL.TheWorkArea[i].Stations[j]));
 	if (FL.TheWorkArea[i + 1].OverFlow.size() < FL.TheWorkArea[i + 1].MaxOverFlowSize)
 	{
 		FL.TheWorkArea[i + 1].OverFlow.push_back(FL.TheWorkArea[i].Stations[j]);
@@ -703,10 +747,20 @@ void ProgramInputsFromUser(FlowLine &FL, int &ListSimulator)
 	system("cls");
 
 }
+
+vector<string> CreateAreaOrderString(FlowLine & FL)
+{
+	vector<string> AreaOrder;
+	for (int i = 0; i < FL.TheWorkArea.size(); i++)
+	{
+		AreaOrder.push_back(FL.TheWorkArea[i].AreaName);
+	}
+
+	return AreaOrder;
+}
 int main (void)
 {
 	FlowLine TestFlow;
-	vector<WorkArea> FL;
 	vector<string> UnitList;
 	ifstream ReadUnitFile("Units2.txt");
 	//ofstream UnitOutputs("Output.csv", fstream::app); USE THIS if you don't want to overwrite 
@@ -716,9 +770,8 @@ int main (void)
 	
 
 
-	CreateFlowLine(FL);
+	CreateFlowLine(TestFlow.TheWorkArea);
 
-	TestFlow.TheWorkArea = FL;
 
 	CreateUnitList(TestFlow);
 
@@ -755,7 +808,7 @@ int main (void)
 	UnitOutputs.close();
 	ReadUnitFile.close();
 
-	//system("pause");
+	system("pause");
 
 	return 0;
 }

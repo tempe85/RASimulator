@@ -26,7 +26,7 @@ INIT::INIT()
 	AreaName = "INIT";
 	Stations = vector<Unit*>(1);
 	BuildT = { 10 };
-	FailCoefficient = 1;
+	FailCoefficient = 10;
 	ReworkCoefficient = 2;
 	AreaDownCoefficient = 11;
 	ValueAdded = false;
@@ -37,7 +37,7 @@ AVS::AVS()
 	AreaName = "AVS";
 	Stations = vector<Unit*>(1);
 	BuildT = { 10 };
-	FailCoefficient = 2;
+	FailCoefficient = 20;
 	ReworkCoefficient = 8;
 	AreaDownCoefficient = 22;
 	ValueAdded = false;
@@ -49,7 +49,7 @@ ULTest::ULTest()
 	Stations = vector<Unit*>(1);
 	BuildT = {30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
-	FailCoefficient = 5;
+	FailCoefficient = 50;
 	AreaDownCoefficient = 22;
 	ReworkCoefficient = 5;
 	ValueAdded = false;
@@ -92,7 +92,7 @@ CLTest::CLTest()
 	AreaName = "CLT";
 	Stations = vector<Unit*>(1);
 	BuildT = {20};
-	FailCoefficient = 2;
+	FailCoefficient = 20;
 	ReworkCoefficient = 8;
 	AreaDownCoefficient = 22;
 	ValueAdded = false;
@@ -147,14 +147,37 @@ Packaging::Packaging()
 //}
 
 // FAILING UNITS
-bool UnitFailCheck(WorkArea curArea)
+void UnitFailCheckHelper(WorkArea const curArea, Unit & curUnit)
 {
-	int random_number = rand() % 100 + 1;
+	if (get<0>(curUnit.UnitFailCheckVariable) == false) //if we haven't checked a unit yet
+	{
+		UnitFailCheck(curArea, curUnit);
+		get<0>(curUnit.UnitFailCheckVariable) = true; //Setting to true to show we have checked the unit
+	}
+	if (get<1>(curUnit.UnitFailCheckVariable) == true) //If we have set the unit to 'failed'
+	{
+		get<2>(curUnit.UnitFailCheckVariable)--; //Decrement the unit fail counter
+	}
+}
+void UnitFailCheck(WorkArea const curArea, Unit & curUnit)
+{
+	int random_number = rand() % 1000 + 1;
 	if (random_number <= curArea.FailCoefficient)
 	{
-		return true;
+		get<1>(curUnit.UnitFailCheckVariable) = true; //The unit failing has been set to true
+		//determine when a unit leaves
+		int random_number2 = rand() % (int)curUnit.TimeLeft; //time which unit fails will be random during timeleft 
+		get<2>(curUnit.UnitFailCheckVariable) = random_number2;
+		return;
 	}
-	return false;
+	return;
+}
+
+void UnitFailCheckReset(Unit & curUnit)
+{
+	get<0>(curUnit.UnitFailCheckVariable) = false;
+	get<1>(curUnit.UnitFailCheckVariable) = false;
+	get<2>(curUnit.UnitFailCheckVariable) = 0;
 }
 
 void UnitReworkCheck(WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
@@ -191,25 +214,18 @@ void UnitReworkCheck(WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
 
 	return;
 }
+
 void PrintUnitFail(Unit FailedUnit, WorkArea curArea)
 {
 	cout << endl <<  FailedUnit.UnitName << " has been sent to troubleshoot from " << curArea.AreaName << endl;
 
 }
-void SendUnitToTS(FlowLine &FL, const int i, const int j, const bool IsOverFlow)
+void SendUnitToTS(FlowLine &FL, const int i, const int j)
 {
-	if (IsOverFlow == false)
-	{
-		PrintUnitFail(*(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i]);
-		FL.ReWork.push_back(FL.TheWorkArea[i].Stations[j]);
-		FL.TheWorkArea[i].Stations[j] = nullptr; //unit leaves to rework
-	}
-	else
-	{
-		PrintUnitFail(*(FL.TheWorkArea[i].OverFlow.front()), FL.TheWorkArea[i]);
-		FL.ReWork.push_back(FL.TheWorkArea[i].OverFlow.front());
-		RemoveFirstOverFlowUnit(FL, i);
-	}
+	UnitFailCheckReset(*(FL.TheWorkArea[i].Stations[j]));
+	PrintUnitFail(*(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i]);
+	FL.ReWork.push_back(FL.TheWorkArea[i].Stations[j]);
+	FL.TheWorkArea[i].Stations[j] = nullptr; //unit leaves to rework
 }
 
 bool WorkArea::CheckIfAreaDown()
