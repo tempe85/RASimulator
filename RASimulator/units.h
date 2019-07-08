@@ -5,6 +5,7 @@ class Unit
 public:
 	Unit() {};
 	string UnitName = "TempUnitName";
+	string LastAreaBeforeTS;
 	unordered_map<string, double> BuildTimeMap;
 	double TimeLeft = 0;
 	double TotalUnitReworkTime = 0;

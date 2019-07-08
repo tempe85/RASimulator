@@ -128,7 +128,6 @@ public:
 	double TimeValueAdded = 0;
 	double TimeNoValueAdded = 0;
 	double TimeUnitRework = 0;
-	vector<string> AreaOrder;
 	vector<WorkArea> TheWorkArea;
 	vector<pair <string, Unit>> UnitList;
 	//vector<Unit*> ReWork;
@@ -153,10 +152,27 @@ public:
 			{ "Pkg", 0 },
 	};
 
+	unordered_map<string, int> OrderOfWorkAreas = {
+			{ "FB", 0},
+			{ "UA", 0 },
+			{ "INIT", 0 },
+			{ "AVS", 0 },
+			{ "ULT", 0 },
+			{ "Rec", 0},
+			{ "Prep", 0 },
+			{ "Build", 0 },
+			{ "CLT", 0 },
+			{"Settings", 0},
+			{ "Doors", 0 },
+			{ "Ins", 0 },
+			{ "Pkg", 0 },
+	};
+
 };
 //what we're going to do is simulate 10 minutes at a time
 
 FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile);
+void CreateFlowLineAreaOrderMap(FlowLine & FL);
 void CreateFlowLine(vector<WorkArea> &FL);
 void RemoveFirstOverFlowUnit(FlowLine &FL, int i);
 //Unit* ReturnLastOverFlowUnit(FlowLine &FL, int i);

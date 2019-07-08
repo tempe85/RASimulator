@@ -242,7 +242,7 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 	string line;
 	Unit *UnitPointer;
 	int i = 0;
-	FL.AreaOrder = CreateAreaOrderString(FL);
+	//FL.AreaOrder = CreateAreaOrderString(FL);
 
 	while (i < FL.TheWorkArea.size())
 	{
@@ -267,20 +267,20 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 			string TempString;
 
 			//Set completed area map for unit
-			if (FL.TheWorkArea[i].Stations[j]->AreaStart != "FB")
-			{
-				for (int k = 0; k < FL.AreaOrder.size(); k++)
-				{
-					if (FL.TheWorkArea[i].AreaName == FL.AreaOrder[k])
-					{
-						k = FL.AreaOrder.size(); //breaking out of loop
-					}
-					else
-					{
-						FL.TheWorkArea[i].Stations[j]->WorkAreasCompleted[FL.AreaOrder[k]] = true;
-					}
-				}
-			}
+			//if (FL.TheWorkArea[i].Stations[j]->AreaStart != "FB")
+			//{
+			//	for (int k = 0; k < FL.AreaOrder.size(); k++)
+			//	{
+			//		if (FL.TheWorkArea[i].AreaName == FL.AreaOrder[k])
+			//		{
+			//			k = FL.AreaOrder.size(); //breaking out of loop
+			//		}
+			//		else
+			//		{
+			//			FL.TheWorkArea[i].Stations[j]->WorkAreasCompleted[FL.AreaOrder[k]] = true;
+			//		}
+			//	}
+			//}
 			//There needs to be a build and FB exception
 			if (FL.TheWorkArea[i].AreaName == "Build")
 			{
@@ -581,48 +581,37 @@ bool AreaDownHelper(FlowLine &FL, int & i, int & j)
 }
 void UnitTSHelper(FlowLine & FL)
 {
+	int n = 0;
 	for (list<Unit*>::iterator it = FL.ReWork.begin(); it != FL.ReWork.end();) //iterating backwards because we may pop things from the list
 	{
 		if ((*it)->TotalUnitTroubleShootTime > 0)
 		{
 			(*it)->TotalUnitTroubleShootTime--;
+			++it;
 		}
 		else //TotalUnitTroubleShootTime == 0
 		{
-			//move unit back to line
-			//for (vector<string>::iterator it2 = FL.AreaOrder.begin(); it2 != FL.AreaOrder.end(); ++it2)
-			for (int n = 0; n < FL.TheWorkArea.size(); n++)
-			{
-				if (FL.TheWorkArea[n].AreaName == "Settings" && (*it)->Settings == false) //Skip settings if the unit didn't need it
-				{
-					n++;
-				}
-				if ((*it)->WorkAreasCompleted[FL.TheWorkArea[n].AreaName] == false) //this area is not completed
-				{
-					//this is where the unit needs to go back to
-					//first see if the first station in area is empty
-					if (FL.TheWorkArea[n].Stations[0] == nullptr)
-					{
-						cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << endl;
-						FL.TheWorkArea[n].Stations[0] = (*it);
-						FL.TheWorkArea[n].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[n].AreaName, *(FL.TheWorkArea[n].Stations[0]), FL, FL.TheWorkArea[n].BuildT[0]);
-						it = FL.ReWork.erase(it); //removing unit from rework list
+			n = FL.OrderOfWorkAreas[(*it)->LastAreaBeforeTS];
 
-					}
-					//move to overflow if you can
-					else if (FL.TheWorkArea[n].OverFlow.size() < FL.TheWorkArea[n].MaxOverFlowSize)
-					{
-						cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << " overflow." << endl;
-						FL.TheWorkArea[n].OverFlow.push_back((*it));
-						it = FL.ReWork.erase(it);
-					}
-					else
-					{
-						++it;
-						//OVERFLOW DOWNTIME
-					}
-					n = FL.TheWorkArea.size();
-				}
+			if (FL.TheWorkArea[n].Stations[0] == nullptr)
+			{
+				cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << endl;
+				FL.TheWorkArea[n].Stations[0] = (*it);
+				FL.TheWorkArea[n].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[n].AreaName, *(FL.TheWorkArea[n].Stations[0]), FL, FL.TheWorkArea[n].BuildT[0]);
+				it = FL.ReWork.erase(it); //removing unit from rework list
+
+			}
+			//move to overflow if you can
+			else if (FL.TheWorkArea[n].OverFlow.size() < FL.TheWorkArea[n].MaxOverFlowSize)
+			{
+				cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << " overflow." << endl;
+				FL.TheWorkArea[n].OverFlow.push_back((*it));
+				it = FL.ReWork.erase(it);
+			}
+			else
+			{
+				++it;
+				//OVERFLOW DOWNTIME
 			}
 		}
 
@@ -815,6 +804,15 @@ vector<string> CreateAreaOrderString(FlowLine & FL)
 
 	return AreaOrder;
 }
+void CreateFlowLineAreaOrderMap(FlowLine & FL)
+{
+	int count = 0;
+	for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+	{
+		FL.OrderOfWorkAreas[(*it).AreaName] = count;
+		count++;
+	}
+}
 int main(void)
 {
 	FlowLine TestFlow;
@@ -828,7 +826,7 @@ int main(void)
 
 
 	CreateFlowLine(TestFlow.TheWorkArea);
-
+	CreateFlowLineAreaOrderMap(TestFlow);
 
 	CreateUnitList(TestFlow);
 

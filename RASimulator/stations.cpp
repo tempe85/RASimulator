@@ -184,6 +184,8 @@ void UnitFailCheckReset(Unit & curUnit)
 void UnitReworkCheck(FlowLine & FL, WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
 {
 	int random_number = rand() % 100 + 1;
+	int random_number2 = rand() % 33;
+	double coef = 0;
 	double temp = 0;
 	if (random_number <= curArea.ReworkCoefficient)
 	{
@@ -192,7 +194,8 @@ void UnitReworkCheck(FlowLine & FL, WorkArea curArea, Unit  & curUnit, double & 
 		//short rework
 		if (random_number <= 50) //50% odds short rework
 		{
-			temp = unitBuildTime * .2;
+			coef = (double)random_number2/100;
+			temp = unitBuildTime * coef;
 			cout << " for " << temp << " extra minutes!";
 			curUnit.TotalUnitReworkTime = temp;
 			unitBuildTime += temp;
@@ -200,7 +203,8 @@ void UnitReworkCheck(FlowLine & FL, WorkArea curArea, Unit  & curUnit, double & 
 		//medium rework
 		else if (random_number > 50 && random_number <= 90) //40% odds medium rework
 		{
-			temp = unitBuildTime * .5;
+			coef = ((double)random_number2 + 33) / 100;
+			temp = unitBuildTime * coef;
 			cout << " for " << temp << " extra minutes!";
 			curUnit.TotalUnitReworkTime = temp;
 			unitBuildTime += temp;
@@ -208,7 +212,8 @@ void UnitReworkCheck(FlowLine & FL, WorkArea curArea, Unit  & curUnit, double & 
 		//long rework
 		else //10% odds long rework
 		{
-			temp = unitBuildTime * 1.0;
+			coef = ((double)random_number2 + 66) / 100;
+			temp = unitBuildTime * coef;
 			cout << " for " << temp << " extra minutes!";
 			curUnit.TotalUnitReworkTime = temp;
 			unitBuildTime += temp;
@@ -227,6 +232,8 @@ void PrintUnitFail(Unit FailedUnit, WorkArea curArea)
 }
 void SendUnitToTS(FlowLine &FL, const int i, const int j)
 {
+	FL.TheWorkArea[i].Stations[j]->LastAreaBeforeTS = FL.TheWorkArea[i].AreaName;
+
 	UnitFailCheckReset(*(FL.TheWorkArea[i].Stations[j]));
 	PrintUnitFail(*(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i]);
 	//determine Troubleshoot time
