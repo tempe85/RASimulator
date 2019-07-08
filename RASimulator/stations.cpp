@@ -6,7 +6,7 @@ FB::FB()
 	Stations = vector<Unit*>(6);
 	BuildT = { 120 };
 	ValueAdded = true;
-	ReworkCoefficient = 5;
+	ReworkCoefficient = 3;
 	MaxOverFlowSize = 0;
 }
 UA::UA()
@@ -16,7 +16,7 @@ UA::UA()
 	BuildT = {20,20,20,20,20};
 	//BuildT = { 60 };
 	ValueAdded = true;
-	ReworkCoefficient = 7;
+	ReworkCoefficient = 5;
 	MaxOverFlowSize = 20;
 
 }
@@ -46,8 +46,8 @@ AVS::AVS()
 ULTest::ULTest()
 {
 	AreaName = "ULT";
-	Stations = vector<Unit*>(1);
-	BuildT = {30};
+	Stations = vector<Unit*>(2);
+	BuildT = {30, 30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
 	FailCoefficient = 50;
 	AreaDownCoefficient = 22;
@@ -147,10 +147,11 @@ Packaging::Packaging()
 //}
 
 // FAILING UNITS
-void UnitFailCheckHelper(WorkArea const curArea, Unit & curUnit)
+void UnitFailCheckHelper(WorkArea const curArea, Unit & curUnit, FlowLine & FL)
 {
 	if (get<0>(curUnit.UnitFailCheckVariable) == false) //if we haven't checked a unit yet
 	{
+		UnitReworkCheck(FL, curArea, curUnit, curUnit.TimeLeft);
 		UnitFailCheck(curArea, curUnit);
 		get<0>(curUnit.UnitFailCheckVariable) = true; //Setting to true to show we have checked the unit
 	}
@@ -180,9 +181,10 @@ void UnitFailCheckReset(Unit & curUnit)
 	get<2>(curUnit.UnitFailCheckVariable) = 0;
 }
 
-void UnitReworkCheck(WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
+void UnitReworkCheck(FlowLine & FL, WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
 {
 	int random_number = rand() % 100 + 1;
+	double temp = 0;
 	if (random_number <= curArea.ReworkCoefficient)
 	{
 		cout << endl << curUnit.UnitName << " is being reworked in " << curArea.AreaName;
@@ -190,25 +192,28 @@ void UnitReworkCheck(WorkArea curArea, Unit  & curUnit, double & unitBuildTime)
 		//short rework
 		if (random_number <= 50) //50% odds short rework
 		{
-			cout << " for " << unitBuildTime * .2 << " extra minutes!";
-			curUnit.TotalUnitReworkTime = unitBuildTime * .2;
-			unitBuildTime += unitBuildTime * .2;
+			temp = unitBuildTime * .2;
+			cout << " for " << temp << " extra minutes!";
+			curUnit.TotalUnitReworkTime = temp;
+			unitBuildTime += temp;
 		}
 		//medium rework
 		else if (random_number > 50 && random_number <= 90) //40% odds medium rework
 		{
-			cout << " for " << unitBuildTime * .5 << " extra minutes!";
-			curUnit.TotalUnitReworkTime = unitBuildTime * .5;
-			unitBuildTime += unitBuildTime * .5;
+			temp = unitBuildTime * .5;
+			cout << " for " << temp << " extra minutes!";
+			curUnit.TotalUnitReworkTime = temp;
+			unitBuildTime += temp;
 		}
 		//long rework
 		else //10% odds long rework
 		{
-			cout << " for " << unitBuildTime * 1.0 << " extra minutes!";
-			curUnit.TotalUnitReworkTime = unitBuildTime * 1.0;
-			unitBuildTime += unitBuildTime * 1.0;
+			temp = unitBuildTime * 1.0;
+			cout << " for " << temp << " extra minutes!";
+			curUnit.TotalUnitReworkTime = temp;
+			unitBuildTime += temp;
 		}
-
+		FL.ReworkTimeByArea[curArea.AreaName] += temp;
 		cout << endl;
 	}
 

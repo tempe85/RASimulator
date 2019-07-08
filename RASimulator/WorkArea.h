@@ -118,7 +118,7 @@ public:
 class FlowLine
 {
 public:
-	double WorkDay = 480;
+	double WorkDay = 2400;
 	double WorkTime = 1;
 	int UnitMode;
 	int AssignUnitID = 1;
@@ -137,6 +137,21 @@ public:
 	int BuildStation6 = 10;
 	bool CheckAreaDown = false;
 
+	unordered_map<string, int> ReworkTimeByArea = {
+			{ "FB", 0},
+			{ "UA", 0 },
+			{ "INIT", 0 },
+			{ "AVS", 0 },
+			{ "ULT", 0 },
+			{ "Rec", 0},
+			{ "Prep", 0 },
+			{ "Build", 0 },
+			{ "CLT", 0 },
+			{"Settings", 0},
+			{ "Doors", 0 },
+			{ "Ins", 0 },
+			{ "Pkg", 0 },
+	};
 
 };
 //what we're going to do is simulate 10 minutes at a time
@@ -153,10 +168,10 @@ void PrintFlowLine(FlowLine FL);
 void PrintFailCheckData(FlowLine FL, int i, int j);
 void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j);
 void UnitFailCheck(WorkArea const curArea, Unit & curUnit);
-void UnitFailCheckHelper(WorkArea const curArea, Unit & curUnit);
+void UnitFailCheckHelper(WorkArea const curArea, Unit & curUnit, FlowLine & FL);
 void UnitFailCheckReset(Unit & curUnit);
 void UnitTSHelper(FlowLine &FL);
-void UnitReworkCheck(WorkArea curArea, Unit & curUnit, double & unitBuildTime);
+void UnitReworkCheck(FlowLine & FL, WorkArea curArea, Unit & curUnit, double & unitBuildTime);
 void PrintUnitFail(Unit FailedUnit, WorkArea curArea);
 void SendUnitToTS(FlowLine &FL, const int i, const int j);
 void MoveUnitToNewWorkArea(FlowLine &FL, const int i, const int j);

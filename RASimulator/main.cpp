@@ -51,7 +51,7 @@ void PrintFlowLine(FlowLine FL)
 	{
 		cout << FL.TheWorkArea[i].AreaName << " Units:";
 
-		do 
+		do
 		{
 			//check if null
 			if (!(FL.TheWorkArea[i].Stations[j] == nullptr))
@@ -70,8 +70,8 @@ void PrintFlowLine(FlowLine FL)
 		{
 			if (!(FL.TheWorkArea[i].Stations[j] == nullptr))
 			{
-					cout << FL.TheWorkArea[i].Stations[j]->UnitName;
-					cout << "(" << FL.TheWorkArea[i].Stations[j]->TimeLeft << "),";
+				cout << FL.TheWorkArea[i].Stations[j]->UnitName;
+				cout << "(" << FL.TheWorkArea[i].Stations[j]->TimeLeft << "),";
 			}
 			else //empty
 			{
@@ -79,7 +79,9 @@ void PrintFlowLine(FlowLine FL)
 			}
 		}
 		cout << endl;
-		cout << "Area Downtime: " <<FL.TheWorkArea[i].downtime;
+		cout << "Area Downtime: " << FL.TheWorkArea[i].downtime;
+		cout << endl;
+		cout << "Total Area Rework time: " << FL.ReworkTimeByArea[FL.TheWorkArea[i].AreaName];
 		cout << endl;
 		cout << "Area Overflow: ";
 		if (!FL.TheWorkArea[i].OverFlow.empty())
@@ -98,7 +100,7 @@ void PrintFlowLine(FlowLine FL)
 			cout << 0;
 		}
 		cout << endl;
-		
+
 		j = 0;
 		i++;
 	} while (i < FL.TheWorkArea.size());
@@ -113,7 +115,7 @@ void PrintFlowLine(FlowLine FL)
 	//{
 	//	cout << (*it)->UnitName << ",";
 	//}
-	cout << FL.CompletedUnits; 
+	cout << FL.CompletedUnits;
 	cout << endl << "Value added minutes completed: " << FL.TimeValueAdded;
 	cout << endl << "No value added minutes completed: " << FL.TimeNoValueAdded;
 	cout << endl << "Unit rework time: " << FL.TimeUnitRework;
@@ -219,7 +221,7 @@ string GenerateUnitList(FlowLine & FL)
 			}
 			return "DD1";
 		}
-		else if (random_number > 50  && random_number >= 75)
+		else if (random_number > 50 && random_number >= 75)
 		{
 			return "SD2";
 		}
@@ -290,12 +292,12 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 				else
 				{
 					FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]);
-					FL.TheWorkArea[i].Stations[j]->TimeLeft -= ((FL.TheWorkArea[i].Stations[j]->TimeLeft) / (FL.TheWorkArea[i].Stations.size()-1))* j;
+					FL.TheWorkArea[i].Stations[j]->TimeLeft -= ((FL.TheWorkArea[i].Stations[j]->TimeLeft) / (FL.TheWorkArea[i].Stations.size() - 1))* j;
 				}
 			}
 			else if (FL.TheWorkArea[i].AreaName == "FB")
 			{
-				FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]); 
+				FL.TheWorkArea[i].Stations[j]->TimeLeft = (FL.TheWorkArea[i].BuildT[0] * TestUnit.BuildTimeMap[FL.TheWorkArea[i].AreaName]);
 				FL.TheWorkArea[i].Stations[j]->TimeLeft -= ((FL.TheWorkArea[i].Stations[j]->TimeLeft) / ((FL.TheWorkArea[i].Stations.size()))* j);
 			}
 			else if (FL.TheWorkArea[i].AreaName == "UA") //UA needs kits available at the start, only the first time, overflow should have units, ~15
@@ -307,7 +309,7 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 					for (int k = 0; k < 15; k++) //this loop determines overflow starting size for UA
 					{
 						//getline(ReadUnitFile, line);
-						
+
 						line = GenerateUnitList(FL);
 						if (FL.userInputGenerator == 1 || FL.userInputGenerator == 2) //after generation, increment counter unless using the random generator
 						{
@@ -328,7 +330,7 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 				}
 
 				//FL.TheWorkArea[i].Stations[j]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[i].AreaName, TestUnit, FL, FL.TheWorkArea[i].BuildT[j]);
-			
+
 			}
 			else //if it is not build or FB
 			{
@@ -365,7 +367,7 @@ bool CheckIfFinished(double TimeLeft)
 	return false;
 }
 
-void MoveInFlowline (FlowLine &FL, int &i, int &j, double & WorkdayTime)
+void MoveInFlowline(FlowLine &FL, int &i, int &j, double & WorkdayTime)
 {
 	if (i == 0 && j == 0) //we're at the start of the line, set i to -1 in order to break out of do loop
 	{
@@ -495,8 +497,6 @@ void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j)
 	//Keeping track of where a unit started
 	FL.TheWorkArea[i].Stations[j]->AreaStart = FL.TheWorkArea[i].AreaName;
 	FL.TheWorkArea[i].Stations[j]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[0].AreaName, *(FL.TheWorkArea[i].Stations[j]), FL, FL.TheWorkArea[i].BuildT[0]); //BuildT is zero because FB BuildT is size 1
-	//Check if rework needed
-	UnitReworkCheck(FL.TheWorkArea[i], *(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i].Stations[j]->TimeLeft);
 
 
 	return;
@@ -567,7 +567,7 @@ bool AreaDownHelper(FlowLine &FL, int & i, int & j)
 		//cout << endl << FL.TheWorkArea[i].AreaName << "Area down for " << FL.TheWorkArea[i].AreaDownTimer << " more minutes" << endl;
 		if (FL.TheWorkArea[i].AreaDownTimer == 30)
 		{
-			cout << endl << FL.TheWorkArea[i].AreaName << " area Down! (" << FL.WorkDay<< ")" <<endl;
+			cout << endl << FL.TheWorkArea[i].AreaName << " area Down! (" << FL.WorkDay << ")" << endl;
 		}
 		FL.TheWorkArea[i].AreaDownTimer -= FL.WorkTime;
 		if (FL.TheWorkArea[i].AreaDownTimer <= 0) //station back up
@@ -651,7 +651,7 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 				it->AreaDown = true;
 				it->AreaDownTimer = 30;
 			};
-			
+
 		}
 	}
 	do
@@ -729,7 +729,7 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 		{
 			SimulateFormboard(FL, i, j, ReadUnitFile);
 		}
-		
+
 
 	} while (i > -1 || j != 0);
 	//Count downtime
@@ -765,7 +765,7 @@ void CreateUnitList(FlowLine &FL)
 	SD2 Unit_SD2;
 	DD1 Unit_DD1;
 	DD2 Unit_DD2;
-	
+
 	FL.UnitList.push_back({ "SD1", Unit_SD1 });
 	FL.UnitList.push_back({ "SD2", Unit_SD2 });
 	FL.UnitList.push_back({ "DD1", Unit_DD1 });
@@ -815,16 +815,16 @@ vector<string> CreateAreaOrderString(FlowLine & FL)
 
 	return AreaOrder;
 }
-int main (void)
+int main(void)
 {
 	FlowLine TestFlow;
 	vector<string> UnitList;
 	ifstream ReadUnitFile("Units2.txt");
 	//ofstream UnitOutputs("Output.csv", fstream::app); USE THIS if you don't want to overwrite 
-	ofstream UnitOutputs("Output.csv"); 
-	
+	ofstream UnitOutputs("Output.csv");
+
 	srand(std::time(nullptr)); //seed for rand
-	
+
 
 
 	CreateFlowLine(TestFlow.TheWorkArea);
@@ -832,7 +832,7 @@ int main (void)
 
 	CreateUnitList(TestFlow);
 
-//	PrintFlowLine(TestFlow);
+	//	PrintFlowLine(TestFlow);
 
 	int continueSim = 0;
 	int ListSimulator = 0;
