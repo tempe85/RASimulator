@@ -581,7 +581,7 @@ bool AreaDownHelper(FlowLine &FL, int & i, int & j)
 }
 void UnitTSHelper(FlowLine & FL)
 {
-	for (list<Unit*>::iterator it = FL.ReWork.begin(); it != FL.ReWork.end(); ++it) //iterating backwards because we may pop things from the list
+	for (list<Unit*>::iterator it = FL.ReWork.begin(); it != FL.ReWork.end();) //iterating backwards because we may pop things from the list
 	{
 		if ((*it)->TotalUnitTroubleShootTime > 0)
 		{
@@ -606,7 +606,7 @@ void UnitTSHelper(FlowLine & FL)
 						cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << endl;
 						FL.TheWorkArea[n].Stations[0] = (*it);
 						FL.TheWorkArea[n].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[n].AreaName, *(FL.TheWorkArea[n].Stations[0]), FL, FL.TheWorkArea[n].BuildT[0]);
-						it = FL.ReWork.erase(it++); //removing unit from rework list
+						it = FL.ReWork.erase(it); //removing unit from rework list
 
 					}
 					//move to overflow if you can
@@ -614,10 +614,11 @@ void UnitTSHelper(FlowLine & FL)
 					{
 						cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << " overflow." << endl;
 						FL.TheWorkArea[n].OverFlow.push_back((*it));
-						it = FL.ReWork.erase(it++);
+						it = FL.ReWork.erase(it);
 					}
 					else
 					{
+						++it;
 						//OVERFLOW DOWNTIME
 					}
 					n = FL.TheWorkArea.size();
@@ -850,7 +851,7 @@ int main (void)
 		cin >> continueSim;
 		if (continueSim == 1)
 		{
-			TestFlow.WorkDay = 480 * 10;
+			TestFlow.WorkDay = 480 * 1000;
 		}
 		else
 		{
@@ -859,6 +860,8 @@ int main (void)
 
 		system("pause");
 	} while (continueSim != 0);
+
+
 
 
 	UnitOutputs.close();
