@@ -104,9 +104,9 @@ void PrintFlowLine(FlowLine FL)
 	} while (i < FL.TheWorkArea.size());
 
 	cout << endl << "Current Rework Tracker: ";
-	for (vector<Unit*>::iterator it = FL.ReWork.begin(); it != FL.ReWork.end(); ++it)
+	for (list<Unit*>::iterator it = FL.ReWork.begin(); it != FL.ReWork.end(); ++it)
 	{
-		cout << (*it)->UnitName << ",";
+		cout << (*it)->UnitName << "(" << (*it)->TotalUnitTroubleShootTime << ")" << ",";
 	}
 	cout << endl << "Completed Units: Count:" << FL.CompletedUnitCounter << "  Unit Type: ";
 	//for (vector<Unit*>::iterator it = FL.CompletedUnits.begin(); it != FL.CompletedUnits.end(); ++it)
@@ -240,7 +240,7 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 	string line;
 	Unit *UnitPointer;
 	int i = 0;
-	vector<string> AreaNames = CreateAreaOrderString(FL);
+	FL.AreaOrder = CreateAreaOrderString(FL);
 
 	while (i < FL.TheWorkArea.size())
 	{
@@ -267,15 +267,15 @@ FlowLine FillFlowLine(FlowLine &FL, Unit TestUnit, ifstream & ReadUnitFile)
 			//Set completed area map for unit
 			if (FL.TheWorkArea[i].Stations[j]->AreaStart != "FB")
 			{
-				for (int k = 0; k < AreaNames.size(); k++)
+				for (int k = 0; k < FL.AreaOrder.size(); k++)
 				{
-					if (FL.TheWorkArea[i].AreaName == AreaNames[k])
+					if (FL.TheWorkArea[i].AreaName == FL.AreaOrder[k])
 					{
-						k = AreaNames.size(); //breaking out of loop
+						k = FL.AreaOrder.size(); //breaking out of loop
 					}
 					else
 					{
-						FL.TheWorkArea[i].Stations[j]->WorkAreasCompleted[AreaNames[k]] = true;
+						FL.TheWorkArea[i].Stations[j]->WorkAreasCompleted[FL.AreaOrder[k]] = true;
 					}
 				}
 			}
@@ -579,7 +579,58 @@ bool AreaDownHelper(FlowLine &FL, int & i, int & j)
 	}
 	return false;
 }
+void UnitTSHelper(FlowLine & FL)
+{
+	for (list<Unit*>::iterator it = FL.ReWork.begin(); it != FL.ReWork.end(); ++it) //iterating backwards because we may pop things from the list
+	{
+		if ((*it)->TotalUnitTroubleShootTime > 0)
+		{
+			(*it)->TotalUnitTroubleShootTime--;
+		}
+		else //TotalUnitTroubleShootTime == 0
+		{
+			//move unit back to line
+			//for (vector<string>::iterator it2 = FL.AreaOrder.begin(); it2 != FL.AreaOrder.end(); ++it2)
+			for (int n = 0; n < FL.TheWorkArea.size(); n++)
+			{
+				if (FL.TheWorkArea[n].AreaName == "Settings" && (*it)->Settings == false) //Skip settings if the unit didn't need it
+				{
+					n++;
+				}
+				if ((*it)->WorkAreasCompleted[FL.TheWorkArea[n].AreaName] == false) //this area is not completed
+				{
+					//this is where the unit needs to go back to
+					//first see if the first station in area is empty
+					if (FL.TheWorkArea[n].Stations[0] == nullptr)
+					{
+						cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << endl;
+						FL.TheWorkArea[n].Stations[0] = (*it);
+						FL.TheWorkArea[n].Stations[0]->TimeLeft = CalculateTimeLeft(FL.TheWorkArea[n].AreaName, *(FL.TheWorkArea[n].Stations[0]), FL, FL.TheWorkArea[n].BuildT[0]);
+						it = FL.ReWork.erase(it++); //removing unit from rework list
 
+					}
+					//move to overflow if you can
+					else if (FL.TheWorkArea[n].OverFlow.size() < FL.TheWorkArea[n].MaxOverFlowSize)
+					{
+						cout << "Unit " << (*it)->UnitName << " is moving from TS to " << FL.TheWorkArea[n].AreaName << " overflow." << endl;
+						FL.TheWorkArea[n].OverFlow.push_back((*it));
+						it = FL.ReWork.erase(it++);
+					}
+					else
+					{
+						//OVERFLOW DOWNTIME
+					}
+					n = FL.TheWorkArea.size();
+				}
+			}
+		}
+
+		if (FL.ReWork.empty())
+		{
+			break;
+		}
+	}
+}
 FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 {
 	int i = FL.TheWorkArea.size() - 1;
@@ -683,6 +734,11 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 	//Count downtime
 	CountAreaDowntime(FL);
 	CalculateUnitDownTime(FL);
+
+	if (!FL.ReWork.empty()) //if the TS area is not empty, then we will check TS
+	{
+		UnitTSHelper(FL);
+	}
 
 	return FL;
 }
@@ -807,7 +863,6 @@ int main (void)
 
 	UnitOutputs.close();
 	ReadUnitFile.close();
-
 	system("pause");
 
 	return 0;

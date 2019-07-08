@@ -128,9 +128,11 @@ public:
 	double TimeValueAdded = 0;
 	double TimeNoValueAdded = 0;
 	double TimeUnitRework = 0;
+	vector<string> AreaOrder;
 	vector<WorkArea> TheWorkArea;
 	vector<pair <string, Unit>> UnitList;
-	vector<Unit*> ReWork;
+	//vector<Unit*> ReWork;
+	list<Unit*> ReWork;
 	vector<Unit*> CompletedUnits;
 	int BuildStation6 = 10;
 	bool CheckAreaDown = false;
@@ -153,11 +155,14 @@ void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j);
 void UnitFailCheck(WorkArea const curArea, Unit & curUnit);
 void UnitFailCheckHelper(WorkArea const curArea, Unit & curUnit);
 void UnitFailCheckReset(Unit & curUnit);
+void UnitTSHelper(FlowLine &FL);
 void UnitReworkCheck(WorkArea curArea, Unit & curUnit, double & unitBuildTime);
 void PrintUnitFail(Unit FailedUnit, WorkArea curArea);
 void SendUnitToTS(FlowLine &FL, const int i, const int j);
 void MoveUnitToNewWorkArea(FlowLine &FL, const int i, const int j);
 void MoveUnitToNextStation(FlowLine &FL, const int i, const int j);
+
+Unit CheckUnitType(string line, FlowLine FL);
 
 bool CheckIfFinished(double TimeLeft);
 double CalculateTimeLeft(string AreaName, Unit MOT, FlowLine FL, double BuildTime);

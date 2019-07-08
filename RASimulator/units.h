@@ -3,6 +3,7 @@
 class Unit
 {
 public:
+	Unit() {};
 	string UnitName = "TempUnitName";
 	unordered_map<string, double> BuildTimeMap;
 	double TimeLeft = 0;
@@ -10,6 +11,7 @@ public:
 	double TotalUnitNoValueTime = 0;
 	double TotalUnitValueTime = 0;
 	double TotalUnitDownTime = 0;
+	int TotalUnitTroubleShootTime = 0;
 	tuple <bool, bool, int> UnitFailCheckVariable = { false, false, 0 }; // <0> Has a unit been check?? <1> Has a unit failed? <2> Unit fail counter
 	pair <bool, int> UnitFailVar = { false, 0 };
 	int IDnum = 0;
@@ -32,7 +34,6 @@ public:
 			{ "Pkg", false },
 	};
 	string AreaStart;
-	Unit() {};
 	bool Settings = false; //default 
 };
 

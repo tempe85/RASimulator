@@ -12,6 +12,7 @@ void SimulateFormboard(FlowLine &FL, int &i, int &j, ifstream & ReadUnitFile)
 	{
 		//if finished then update that it's finished with the area
 		UpdateCompletedAreas(*(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i]);
+
 		//check if first UA spot is open
 		if (FL.TheWorkArea[i + 1].Stations[0] == nullptr)
 		{
@@ -208,6 +209,7 @@ void SimulateCLT(FlowLine &FL, int &i, int &j)
 				//needs to be moved to a new area, only if a spot is available
 				if (FL.TheWorkArea[k + 1].Stations[0] == nullptr) //there is a free spot
 				{
+					//Reset Fail checks
 					UnitFailCheckReset(*(FL.TheWorkArea[i].Stations[j]));
 					FL.TheWorkArea[k + 1].Stations[0] = FL.TheWorkArea[i].Stations[j]; //Moving pointer to the next area spot
 					FL.TheWorkArea[i].Stations[j] = nullptr; //Current spot is now free
@@ -287,6 +289,7 @@ void SimulateAVS(FlowLine &FL, int &i, int &j)
 				//needs to be moved to a new area, only if a spot is available
 				if (OpenSpotInNextWorkArea(FL, i, s)) //this is a AVS specific thing, it can move to any open spot in ULT
 				{
+					
 					UnitFailCheckReset(*(FL.TheWorkArea[i].Stations[j]));
 					FL.TheWorkArea[i + 1].Stations[s] = FL.TheWorkArea[i].Stations[j]; //Moving pointer to the next area spot
 					FL.TheWorkArea[i].Stations[j] = nullptr; //Current spot is now free

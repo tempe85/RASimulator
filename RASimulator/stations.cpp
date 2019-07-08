@@ -224,6 +224,20 @@ void SendUnitToTS(FlowLine &FL, const int i, const int j)
 {
 	UnitFailCheckReset(*(FL.TheWorkArea[i].Stations[j]));
 	PrintUnitFail(*(FL.TheWorkArea[i].Stations[j]), FL.TheWorkArea[i]);
+	//determine Troubleshoot time
+	int random_number = rand() % 100 + 1;
+	if (random_number <= 33)
+	{
+		FL.TheWorkArea[i].Stations[j]->TotalUnitTroubleShootTime = 60;
+	}
+	else if (random_number >= 66)
+	{
+		FL.TheWorkArea[i].Stations[j]->TotalUnitTroubleShootTime = 180;
+	}
+	else
+	{
+		FL.TheWorkArea[i].Stations[j]->TotalUnitTroubleShootTime = 120;
+	}
 	FL.ReWork.push_back(FL.TheWorkArea[i].Stations[j]);
 	FL.TheWorkArea[i].Stations[j] = nullptr; //unit leaves to rework
 }
