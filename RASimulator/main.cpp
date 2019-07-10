@@ -47,8 +47,10 @@ void PrintFlowLine(FlowLine FL)
 {
 	int j = 0;
 	int i = 0;
+	int overflowcounter = 0;
 	do
 	{
+		cout << "************************************" << endl;
 		cout << FL.TheWorkArea[i].AreaName << " Units:";
 
 		do
@@ -79,11 +81,11 @@ void PrintFlowLine(FlowLine FL)
 			}
 		}
 		cout << endl;
-		cout << "Area Downtime: " << FL.TheWorkArea[i].downtime;
-		cout << endl;
+		cout << "Area Downtime: " << FL.TheWorkArea[i].downtime << endl;
+		cout << "Area Downtime %: " << FL.TheWorkArea[i].downtime / FL.WorkDayCounter << endl;
 		cout << "Total Area Rework time: " << FL.ReworkTimeByArea[FL.TheWorkArea[i].AreaName];
 		cout << endl;
-		cout << "Area Overflow: ";
+		cout << "Area Overflow: " << '(' << FL.TheWorkArea[i].OverFlow.size() <<  "):";
 		if (!FL.TheWorkArea[i].OverFlow.empty())
 		{
 			//cout << FL.TheWorkArea.OverFLow;
@@ -99,9 +101,11 @@ void PrintFlowLine(FlowLine FL)
 		{
 			cout << 0;
 		}
+		cout << endl << "************************************" << endl;
 		cout << endl;
 
 		j = 0;
+		overflowcounter += FL.TheWorkArea[i].OverFlow.size();
 		i++;
 	} while (i < FL.TheWorkArea.size());
 
@@ -116,6 +120,17 @@ void PrintFlowLine(FlowLine FL)
 	//	cout << (*it)->UnitName << ",";
 	//}
 	cout << FL.CompletedUnits;
+	//PPU
+	int ppu = 0;
+	for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+	{
+		ppu += it->Stations.size();
+	}
+
+	//cout << endl << ppu;
+	//cout << endl << FL.WorkDayCounter;
+	cout << endl << "PPU (people per unit): " << (double)FL.CompletedUnits.size() / (double)ppu;
+	cout << endl << "Kits for UA: "<< FL.TheWorkArea[1].OverFlow.size() << " Non-UA overflow total size: " << overflowcounter - FL.TheWorkArea[1].OverFlow.size();
 	cout << endl << "Value added minutes completed: " << FL.TimeValueAdded;
 	cout << endl << "No value added minutes completed: " << FL.TimeNoValueAdded;
 	cout << endl << "Unit rework time: " << FL.TimeUnitRework;
@@ -374,6 +389,7 @@ void MoveInFlowline(FlowLine &FL, int &i, int &j, double & WorkdayTime)
 		i = -1;
 		j = 0;
 		WorkdayTime -= FL.WorkTime;
+		FL.WorkDayCounter += FL.WorkTime;
 
 		return;
 	}
@@ -471,6 +487,39 @@ void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int continueSim, 
 	{
 		PrintFlowLine(FL);
 		system("pause");
+	}
+	return;
+}
+
+void SimulateFlowHelperTester(FlowLine &FL, ifstream & ReadUnitFile)
+{
+	for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+	{
+		it->MaxOverFlowSize = 1000;
+	}
+	FL.UnitMode = 1;
+	FL.userInputGenerator = 1;
+	int CheckAreaDown;
+	int unitCounter = 0;
+	bool checkAreaDown = false;
+	Unit TestUnit;
+
+	FillFlowLine(FL, TestUnit, ReadUnitFile);
+	while (FL.WorkDay > 0)
+	{
+		CheckAreaDown = FL.WorkDay;
+
+		//SimulateFlowLine(FL, ReadUnitFile);
+		//cout << CheckAreaDown % 30;
+		if (CheckAreaDown % 30 == 0) //checking every thirty 30 minutes for area going down
+		{
+			FL.CheckAreaDown = true;
+		}
+		else
+		{
+			FL.CheckAreaDown = false;
+		}
+		SimulateFlowLine2(FL, ReadUnitFile);
 	}
 	return;
 }
@@ -656,7 +705,7 @@ FlowLine SimulateFlowLine2(FlowLine &FL, ifstream & ReadUnitFile)
 			FL.TheWorkArea[i].AreaName == "Settings"
 			)
 		{
-			SimulateBasicArea(FL, i, j);
+		SimulateBasicArea(FL, i, j);
 		}
 		while (FL.TheWorkArea[i].AreaName == "UA")
 		{
@@ -747,6 +796,29 @@ void UnitTimeOutputs(FlowLine const FL, ofstream & UnitOutputs)
 	}
 }
 
+void SimDataOutputs(FlowLine FL, ofstream & SimData)
+{
+	int totalstations = 0;
+	int totaloverflow = 0;
+	for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+	{
+		totalstations += it->Stations.size();
+	}
+	for (vector<WorkArea>::iterator it = FL.TheWorkArea.begin(); it != FL.TheWorkArea.end(); ++it)
+	{
+		totaloverflow += it->OverFlow.size();
+	}
+	//SimData << "Units, People, UA OF, Non-UA OF, ULT OF\n";
+	SimData << FL.CompletedUnits.size() << ",";
+	SimData << totalstations << ",";
+	SimData << FL.TheWorkArea[1].OverFlow.size() << ",";
+	SimData << totaloverflow - FL.TheWorkArea[1].OverFlow.size() << ",";
+	SimData << FL.TheWorkArea[4].OverFlow.size() << ",";
+	SimData << "\n";
+	
+
+}
+
 void CreateUnitList(FlowLine &FL)
 {
 
@@ -816,18 +888,19 @@ void CreateFlowLineAreaOrderMap(FlowLine & FL)
 int main(void)
 {
 	FlowLine TestFlow;
+	FlowLine *TFlow;
 	vector<string> UnitList;
 	ifstream ReadUnitFile("Units2.txt");
-	//ofstream UnitOutputs("Output.csv", fstream::app); USE THIS if you don't want to overwrite 
-	ofstream UnitOutputs("Output.csv");
+	ofstream UnitOutputs("Output.csv", fstream::app); //USE THIS if you don't want to overwrite 
+	ofstream SimData("SimData.csv", fstream::app);
+	//ofstream UnitOutputs("Output.csv");
 
 	srand(std::time(nullptr)); //seed for rand
 
 
 
 	CreateFlowLine(TestFlow.TheWorkArea);
-	CreateFlowLineAreaOrderMap(TestFlow);
-
+    CreateFlowLineAreaOrderMap(TestFlow);
 	CreateUnitList(TestFlow);
 
 	//	PrintFlowLine(TestFlow);
@@ -839,7 +912,6 @@ int main(void)
 	{
 		ProgramInputsFromUser(TestFlow, ListSimulator);
 		SimulateFlowHelper(TestFlow, ReadUnitFile, continueSim, ListSimulator);
-		UnitTimeOutputs(TestFlow, UnitOutputs);
 
 		//system("cls");
 		cout << "Please select between: \n";
@@ -859,9 +931,25 @@ int main(void)
 		system("pause");
 	} while (continueSim != 0);
 
+	UnitTimeOutputs(TestFlow, UnitOutputs);
 
+	CreateFlowLine(TestFlow.TheWorkArea);
 
+	/*TFlow = new FlowLine;
+	for (int i = 0; i < 10; i++)
+	{
+		CreateFlowLine(TFlow->TheWorkArea);
+		CreateFlowLineAreaOrderMap(*(TFlow));
+		CreateUnitList(*(TFlow));
+		SimulateFlowHelperTester(*(TFlow), ReadUnitFile);
+		SimDataOutputs(*(TFlow), SimData);
+		PrintFlowLine(*(TFlow));
+		delete TFlow;
+		TFlow = nullptr;
+		TFlow = new FlowLine;
+	}*/
 
+	SimData.close();
 	UnitOutputs.close();
 	ReadUnitFile.close();
 	system("pause");

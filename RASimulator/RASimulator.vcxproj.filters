@@ -57,5 +57,8 @@
     <None Include="Output.csv">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="SimData.csv">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

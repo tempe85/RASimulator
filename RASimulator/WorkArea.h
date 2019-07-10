@@ -118,7 +118,10 @@ public:
 class FlowLine
 {
 public:
+	FlowLine() {};
+	~FlowLine() {};
 	double WorkDay = 2400;
+	double WorkDayCounter = 0;
 	double WorkTime = 1;
 	int UnitMode;
 	int AssignUnitID = 1;
@@ -180,6 +183,7 @@ bool OverFlowIsEmpty(FlowLine &FL, int i);
 void MoveToOverFlow(FlowLine &FL, int i, int j);
 FlowLine SimulateFlowLine(FlowLine &FL, ifstream & ReadUnitFile, int &i, int &j);
 void SimulateFlowHelper(FlowLine &FL, ifstream & ReadUnitFile, int continueSim, int const ListSimulator);
+void SimulateFlowHelperTester(FlowLine &FL, ifstream & ReadUnitFile);
 void PrintFlowLine(FlowLine FL);
 void PrintFailCheckData(FlowLine FL, int i, int j);
 void AddUnitToFlow(FlowLine &FL, ifstream & ReadUnitFile, int i, int j);
@@ -225,6 +229,7 @@ bool AreaDownHelper(FlowLine &FL, int & i, int & j);
 
 //Output file functions
 void UnitTimeOutputs(FlowLine const FL, ofstream & UnitOutputs);
+void SimDataOutputs(FlowLine FL, ofstream & SimData);
 
 //template <typename T
 ostream& operator<<(ostream& os, const vector<Unit*>& v);

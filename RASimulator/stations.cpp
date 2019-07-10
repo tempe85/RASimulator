@@ -3,7 +3,7 @@
 FB::FB()
 {
 	AreaName = "FB";
-	Stations = vector<Unit*>(6);
+	Stations = vector<Unit*>(5);
 	BuildT = { 120 };
 	ValueAdded = true;
 	ReworkCoefficient = 3;
@@ -13,7 +13,7 @@ UA::UA()
 {
 	AreaName = "UA";
 	Stations = vector<Unit*>(4);
-	BuildT = {20,20,20,20,20};
+	BuildT = {20,20,20,20};
 	//BuildT = { 60 };
 	ValueAdded = true;
 	ReworkCoefficient = 5;
@@ -46,8 +46,8 @@ AVS::AVS()
 ULTest::ULTest()
 {
 	AreaName = "ULT";
-	Stations = vector<Unit*>(2);
-	BuildT = {30, 30};
+	Stations = vector<Unit*>(1);
+	BuildT = {30};
 	//vector < pair<int, int>> vect = { {10, 10}, {10, 10}, {30,30} }; this is an alternative
 	FailCoefficient = 50;
 	AreaDownCoefficient = 22;
